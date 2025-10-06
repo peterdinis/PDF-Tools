@@ -1,7 +1,7 @@
 "use client"
 
 import { FC, useState } from "react"
-import { FileText, Download, Loader2 } from "lucide-react"
+import { FileText, Download, Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import ToolLayout from "@/components/tools/ToolLayout"
 
@@ -21,7 +21,6 @@ const PdfToWordWrapper: FC = () => {
   }
 
   const handleDownload = () => {
-    // In a real implementation, this would download the converted file
     const blob = new Blob(["Converted Word document content"], {
       type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     })
@@ -31,6 +30,12 @@ const PdfToWordWrapper: FC = () => {
     a.download = "converted.docx"
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleResetAll = () => {
+    setFiles([])
+    setConverting(false)
+    setConverted(false)
   }
 
   return (
@@ -45,21 +50,33 @@ const PdfToWordWrapper: FC = () => {
       showUpload={true}
     >
       {files.length > 0 && !converted && (
-        <Button
-          onClick={handleConvert}
-          disabled={converting}
-          className="w-full bg-primary hover:bg-primary/90"
-          size="lg"
-        >
-          {converting ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Converting...
-            </>
-          ) : (
-            "Convert to Word"
-          )}
-        </Button>
+        <div className="space-y-4">
+          <Button
+            onClick={handleConvert}
+            disabled={converting}
+            className="w-full bg-primary hover:bg-primary/90"
+            size="lg"
+          >
+            {converting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Converting...
+              </>
+            ) : (
+              "Convert to Word"
+            )}
+          </Button>
+
+          <Button
+            onClick={handleResetAll}
+            variant="outline"
+            size="lg"
+            className="w-full text-red-500 hover:text-red-600"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Reset All
+          </Button>
+        </div>
       )}
 
       {converted && (
@@ -70,6 +87,9 @@ const PdfToWordWrapper: FC = () => {
           <Button onClick={handleDownload} className="w-full bg-primary hover:bg-primary/90" size="lg">
             <Download className="w-4 h-4 mr-2" />
             Download Word Document
+          </Button>
+          <Button onClick={handleResetAll} variant="outline" size="lg" className="w-full">
+            Convert Another PDF
           </Button>
         </div>
       )}
