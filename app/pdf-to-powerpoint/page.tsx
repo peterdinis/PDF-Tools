@@ -2,7 +2,7 @@ import PDFToPowerPointWrapper from "@/components/pdfs/pdf-to-powerpoint/PDFToPow
 import { NextPage } from "next";
 
 const PDFToPowerPointPage: NextPage = () => {
-    return <PDFToPowerPointWrapper />
-}
+  return <PDFToPowerPointWrapper />;
+};
 
-export default PDFToPowerPointPage
+export default PDFToPowerPointPage;
