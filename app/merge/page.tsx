@@ -1,9 +1,8 @@
+import MergerPDFWrapper from "@/components/pdfs/merge/MergePDFWrapper";
 import { NextPage } from "next";
 
 const MergePDFPage: NextPage = () => {
-    return (
-        <>ABCD</>
-    )
-}
+  return <MergerPDFWrapper />;
+};
 
-export default MergePDFPage
+export default MergePDFPage;
