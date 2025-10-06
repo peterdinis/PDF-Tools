@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { FileText, Menu, X } from "lucide-react"
-import { FC, useState } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import Link from "next/link";
+import { FileText, Menu, X } from "lucide-react";
+import { FC, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Navigation: FC = () => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -22,16 +22,28 @@ const Navigation: FC = () => {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="#" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              href="#"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Merge PDF
             </Link>
-            <Link href="#" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              href="#"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Split PDF
             </Link>
-            <Link href="#" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              href="#"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Compress PDF
             </Link>
-            <Link href="#" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link
+              href="#"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Convert PDF
             </Link>
           </nav>
@@ -88,7 +100,7 @@ const Navigation: FC = () => {
         )}
       </AnimatePresence>
     </header>
-  )
-}
+  );
+};
 
-export default Navigation
+export default Navigation;

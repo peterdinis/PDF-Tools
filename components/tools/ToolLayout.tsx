@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import type { ReactNode } from "react"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import Navigation from "../shared/Navigation"
-import PdfUpload from "../pdfs/PdfUpload"
+import type { ReactNode } from "react";
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import Navigation from "../shared/Navigation";
+import PdfUpload from "../pdfs/PdfUpload";
 
 interface ToolLayoutProps {
-  title: string
-  description: string
-  icon?: ReactNode
-  children: ReactNode
-  files?: File[]
-  onFilesChange?: (files: File[]) => void
-  acceptedFileTypes?: string
-  maxFiles?: number
-  showUpload?: boolean
+  title: string;
+  description: string;
+  icon?: ReactNode;
+  children: ReactNode;
+  files?: File[];
+  onFilesChange?: (files: File[]) => void;
+  acceptedFileTypes?: string;
+  maxFiles?: number;
+  showUpload?: boolean;
 }
 
 export default function ToolLayout({
@@ -60,5 +60,5 @@ export default function ToolLayout({
         </div>
       </main>
     </div>
-  )
+  );
 }
