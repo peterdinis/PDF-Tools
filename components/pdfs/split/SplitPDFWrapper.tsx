@@ -3,7 +3,7 @@
 import { FC, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Download, FileText } from "lucide-react"
+import { Download, FileText, XCircle } from "lucide-react"
 import { PDFDocument } from "pdf-lib"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -45,7 +45,6 @@ const SplitPDFWrapper: FC = () => {
       const results: { blob: Blob; name: string }[] = []
 
       if (splitMode === "all") {
-        // Split into individual pages
         for (let i = 0; i < pageCount; i++) {
           const newPdf = await PDFDocument.create()
           const [copiedPage] = await newPdf.copyPages(pdf, [i])
@@ -55,7 +54,6 @@ const SplitPDFWrapper: FC = () => {
           results.push({ blob, name: `page-${i + 1}.pdf` })
         }
       } else if (splitMode === "range" && pageRange) {
-        // Split by range (e.g., "1-3,5,7-9")
         const ranges = pageRange.split(",").map((r) => r.trim())
         for (const range of ranges) {
           const newPdf = await PDFDocument.create()
@@ -80,7 +78,6 @@ const SplitPDFWrapper: FC = () => {
           }
         }
       } else if (splitMode === "extract" && pageRange) {
-        // Extract specific pages
         const newPdf = await PDFDocument.create()
         const pages = pageRange
           .split(",")
@@ -115,6 +112,14 @@ const SplitPDFWrapper: FC = () => {
     splitPdfs.forEach(({ blob, name }) => {
       setTimeout(() => handleDownload(blob, name), 100)
     })
+  }
+
+  const handleClearAll = () => {
+    setFiles([])
+    setSplitPdfs([])
+    setPageRange("")
+    setSplitMode("all")
+    setTotalPages(0)
   }
 
   return (
@@ -170,9 +175,22 @@ const SplitPDFWrapper: FC = () => {
                     </div>
                   )}
 
-                  <Button onClick={handleSplitPDF} disabled={isProcessing} className="w-full" size="lg">
-                    {isProcessing ? "Splitting PDF..." : "Split PDF"}
-                  </Button>
+                  <div className="flex gap-3">
+                    <Button onClick={handleSplitPDF} disabled={isProcessing} className="w-full" size="lg">
+                      {isProcessing ? "Splitting PDF..." : "Split PDF"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleClearAll}
+                      disabled={isProcessing}
+                      className="w-full"
+                      size="lg"
+                    >
+                      <XCircle className="w-4 h-4 mr-2" />
+                      Clear All
+                    </Button>
+                  </div>
                 </div>
               )}
             </>
@@ -208,17 +226,12 @@ const SplitPDFWrapper: FC = () => {
                 ))}
               </div>
 
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setFiles([])
-                  setSplitPdfs([])
-                  setPageRange("")
-                }}
-                className="w-full"
-              >
-                Split Another PDF
-              </Button>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={handleClearAll} className="w-full">
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Clear All
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -226,6 +239,5 @@ const SplitPDFWrapper: FC = () => {
     </ToolLayout>
   )
 }
-
 
 export default SplitPDFWrapper
