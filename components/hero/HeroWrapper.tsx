@@ -1,5 +1,6 @@
 import { FC } from "react";
 import Navigation from "../shared/Navigation";
+import { ToolsGrid } from "../tools/ToolsGrid";
 
 const HeroWrapper: FC = () => {
     return (
@@ -16,6 +17,7 @@ const HeroWrapper: FC = () => {
                     </p>
                 </div>
             </section>
+            <ToolsGrid />
         </div>
     )
 }
