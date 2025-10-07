@@ -74,3 +74,6 @@ const ExcelWrapper: FC = () => {
     </ToolLayout>
   )
 }
+
+
+export default ExcelWrapper
