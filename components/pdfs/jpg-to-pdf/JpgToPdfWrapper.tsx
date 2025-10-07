@@ -1,79 +1,81 @@
-"use client"
+"use client";
 
-import { FC, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Download, Upload, X } from "lucide-react"
-import { PDFDocument } from "pdf-lib"
-import { useDropzone } from "react-dropzone"
-import { cn } from "@/lib/utils"
-import ToolLayout from "@/components/tools/ToolLayout"
+import { FC, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Download, Upload, X } from "lucide-react";
+import { PDFDocument } from "pdf-lib";
+import { useDropzone } from "react-dropzone";
+import { cn } from "@/lib/utils";
+import ToolLayout from "@/components/tools/ToolLayout";
 
 const JpgToPdfWrapper: FC = () => {
-  const [images, setImages] = useState<File[]>([])
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
+  const [images, setImages] = useState<File[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   const onDrop = (acceptedFiles: File[]) => {
-    setImages((prev) => [...prev, ...acceptedFiles])
-  }
+    setImages((prev) => [...prev, ...acceptedFiles]);
+  };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { "image/*": [".jpg", ".jpeg", ".png"] },
     multiple: true,
-  })
+  });
 
   const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index))
-  }
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleConvert = async () => {
-    if (images.length === 0) return
+    if (images.length === 0) return;
 
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
-      const pdfDoc = await PDFDocument.create()
+      const pdfDoc = await PDFDocument.create();
 
       for (const imageFile of images) {
-        const arrayBuffer = await imageFile.arrayBuffer()
-        const imageBytes = new Uint8Array(arrayBuffer)
+        const arrayBuffer = await imageFile.arrayBuffer();
+        const imageBytes = new Uint8Array(arrayBuffer);
 
-        let image
+        let image;
         if (imageFile.type === "image/png") {
-          image = await pdfDoc.embedPng(imageBytes)
+          image = await pdfDoc.embedPng(imageBytes);
         } else {
-          image = await pdfDoc.embedJpg(imageBytes)
+          image = await pdfDoc.embedJpg(imageBytes);
         }
 
-        const page = pdfDoc.addPage([image.width, image.height])
+        const page = pdfDoc.addPage([image.width, image.height]);
         page.drawImage(image, {
           x: 0,
           y: 0,
           width: image.width,
           height: image.height,
-        })
+        });
       }
 
-      const pdfBytes = await pdfDoc.save()
-      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" })
-      const url = URL.createObjectURL(blob)
-      setPdfUrl(url)
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as unknown as BlobPart], {
+        type: "application/pdf",
+      });
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
     } catch (error) {
-      console.error("[v0] Error converting images to PDF:", error)
-      alert("Failed to convert images. Please try again.")
+      console.error("[v0] Error converting images to PDF:", error);
+      alert("Failed to convert images. Please try again.");
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   const handleDownload = () => {
-    if (!pdfUrl) return
-    const link = document.createElement("a")
-    link.href = pdfUrl
-    link.download = "images.pdf"
-    link.click()
-  }
+    if (!pdfUrl) return;
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.download = "images.pdf";
+    link.click();
+  };
 
   return (
     <ToolLayout
@@ -100,12 +102,18 @@ const JpgToPdfWrapper: FC = () => {
                     <Upload className="w-8 h-8 text-primary" />
                   </div>
                   {isDragActive ? (
-                    <p className="text-lg font-medium">Drop your images here...</p>
+                    <p className="text-lg font-medium">
+                      Drop your images here...
+                    </p>
                   ) : (
                     <>
                       <div>
-                        <p className="text-lg font-medium mb-1">Select images</p>
-                        <p className="text-sm text-muted-foreground">or drag and drop JPG, PNG files</p>
+                        <p className="text-lg font-medium mb-1">
+                          Select images
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          or drag and drop JPG, PNG files
+                        </p>
                       </div>
                       <Button type="button" variant="default">
                         Select Images
@@ -122,7 +130,9 @@ const JpgToPdfWrapper: FC = () => {
                       <div key={index} className="relative group">
                         <div className="aspect-square rounded-lg overflow-hidden border bg-secondary">
                           <img
-                            src={URL.createObjectURL(image) || "/placeholder.svg"}
+                            src={
+                              URL.createObjectURL(image) || "/placeholder.svg"
+                            }
                             alt={image.name}
                             className="w-full h-full object-cover"
                           />
@@ -139,7 +149,12 @@ const JpgToPdfWrapper: FC = () => {
                     ))}
                   </div>
 
-                  <Button onClick={handleConvert} disabled={isProcessing} className="w-full" size="lg">
+                  <Button
+                    onClick={handleConvert}
+                    disabled={isProcessing}
+                    className="w-full"
+                    size="lg"
+                  >
                     {isProcessing
                       ? "Converting..."
                       : `Convert ${images.length} Image${images.length > 1 ? "s" : ""} to PDF`}
@@ -152,8 +167,12 @@ const JpgToPdfWrapper: FC = () => {
               <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
                 <Download className="w-8 h-8 text-green-500" />
               </div>
-              <h3 className="text-xl font-semibold mb-2">PDF Created Successfully!</h3>
-              <p className="text-muted-foreground mb-6">Your PDF is ready to download.</p>
+              <h3 className="text-xl font-semibold mb-2">
+                PDF Created Successfully!
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Your PDF is ready to download.
+              </p>
               <div className="flex gap-3 justify-center">
                 <Button onClick={handleDownload} size="lg">
                   <Download className="w-4 h-4 mr-2" />
@@ -162,8 +181,8 @@ const JpgToPdfWrapper: FC = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setImages([])
-                    setPdfUrl(null)
+                    setImages([]);
+                    setPdfUrl(null);
                   }}
                   size="lg"
                 >
@@ -175,8 +194,7 @@ const JpgToPdfWrapper: FC = () => {
         </CardContent>
       </Card>
     </ToolLayout>
-  )
-}
+  );
+};
 
-
-export default JpgToPdfWrapper
+export default JpgToPdfWrapper;

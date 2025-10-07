@@ -2,7 +2,7 @@ import SignWrapper from "@/components/pdfs/sign/SignWrapper";
 import { NextPage } from "next";
 
 const SignPdfPage: NextPage = () => {
-    return <SignWrapper />
-}
+  return <SignWrapper />;
+};
 
-export default SignPdfPage
+export default SignPdfPage;

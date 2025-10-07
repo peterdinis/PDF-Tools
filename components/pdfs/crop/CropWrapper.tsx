@@ -1,41 +1,56 @@
 "use client";
 
 import { FC, useState } from "react";
-import { Edit, Download, Loader2 } from "lucide-react";
+import { Crop, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PDFDocument } from "pdf-lib";
 import ToolLayout from "@/components/tools/ToolLayout";
 
-const EditPdfWrapper: FC = () => {
+const CropWrapper: FC = () => {
   const [files, setFiles] = useState<File[]>([]);
-  const [editing, setEditing] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
-  const [text, setText] = useState("");
-  const [fontSize, setFontSize] = useState("14");
+  const [cropSize, setCropSize] = useState("a4");
 
-  const handleEdit = async () => {
-    if (files.length === 0 || !text) return;
+  const handleProcess = async () => {
+    if (files.length === 0) return;
 
-    setEditing(true);
+    setProcessing(true);
     try {
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();
       const pdfDoc = await PDFDocument.load(arrayBuffer);
       const pages = pdfDoc.getPages();
-      const firstPage = pages[0];
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const size = Number.parseInt(fontSize);
 
-      const { width, height } = firstPage.getSize();
-      firstPage.drawText(text, {
-        x: 50,
-        y: height - 50,
-        size,
-        font,
-        color: rgb(0, 0, 0),
+      const sizes: Record<string, { width: number; height: number }> = {
+        a4: { width: 595, height: 842 },
+        letter: { width: 612, height: 792 },
+        legal: { width: 612, height: 1008 },
+      };
+
+      const targetSize = sizes[cropSize];
+
+      pages.forEach((page) => {
+        const { width, height } = page.getSize();
+
+        // Calculate crop box to center the content
+        const x = Math.max(0, (width - targetSize.width) / 2);
+        const y = Math.max(0, (height - targetSize.height) / 2);
+
+        page.setCropBox(
+          x,
+          y,
+          Math.min(targetSize.width, width),
+          Math.min(targetSize.height, height),
+        );
       });
 
       const pdfBytes = await pdfDoc.save();
@@ -45,10 +60,10 @@ const EditPdfWrapper: FC = () => {
       const url = URL.createObjectURL(blob);
       setProcessedUrl(url);
     } catch (error) {
-      console.error("Error editing PDF:", error);
-      alert("Failed to edit PDF. Please try again.");
+      console.error("Error cropping PDF:", error);
+      alert("Failed to crop PDF. Please try again.");
     } finally {
-      setEditing(false);
+      setProcessing(false);
     }
   };
 
@@ -56,15 +71,15 @@ const EditPdfWrapper: FC = () => {
     if (!processedUrl) return;
     const link = document.createElement("a");
     link.href = processedUrl;
-    link.download = "edited.pdf";
+    link.download = "cropped.pdf";
     link.click();
   };
 
   return (
     <ToolLayout
-      title="Edit PDF"
-      description="Add text to your PDF"
-      icon={<Edit className="w-8 h-8" />}
+      title="Crop PDF"
+      description="Crop and trim PDF pages to desired size"
+      icon={<Crop className="w-8 h-8" />}
       files={files}
       onFilesChange={setFiles}
       acceptedFileTypes=".pdf"
@@ -74,39 +89,31 @@ const EditPdfWrapper: FC = () => {
       {files.length > 0 && !processedUrl && (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="text">Text to Add</Label>
-            <Textarea
-              id="text"
-              placeholder="Enter text to add to PDF..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="min-h-32"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="fontSize">Font Size</Label>
-            <Input
-              id="fontSize"
-              type="number"
-              min="8"
-              max="72"
-              value={fontSize}
-              onChange={(e) => setFontSize(e.target.value)}
-            />
+            <Label htmlFor="cropSize">Page Size</Label>
+            <Select value={cropSize} onValueChange={setCropSize}>
+              <SelectTrigger id="cropSize">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="a4">A4 (210 × 297 mm)</SelectItem>
+                <SelectItem value="letter">Letter (8.5 × 11 in)</SelectItem>
+                <SelectItem value="legal">Legal (8.5 × 14 in)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button
-            onClick={handleEdit}
-            disabled={editing || !text}
+            onClick={handleProcess}
+            disabled={processing}
             className="w-full bg-primary hover:bg-primary/90"
             size="lg"
           >
-            {editing ? (
+            {processing ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Editing...
+                Cropping...
               </>
             ) : (
-              "Apply Edits"
+              "Crop PDF"
             )}
           </Button>
         </div>
@@ -118,26 +125,25 @@ const EditPdfWrapper: FC = () => {
             <Download className="w-8 h-8 text-green-500" />
           </div>
           <h3 className="text-xl font-semibold mb-2">
-            PDF Edited Successfully!
+            PDF Cropped Successfully!
           </h3>
           <p className="text-muted-foreground mb-6">
-            Your edited PDF is ready to download.
+            Your cropped PDF is ready to download.
           </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={handleDownload} size="lg">
               <Download className="w-4 h-4 mr-2" />
-              Download Edited PDF
+              Download Cropped PDF
             </Button>
             <Button
               variant="outline"
               onClick={() => {
                 setFiles([]);
                 setProcessedUrl(null);
-                setText("");
               }}
               size="lg"
             >
-              Edit Another PDF
+              Crop Another PDF
             </Button>
           </div>
         </div>
@@ -146,4 +152,4 @@ const EditPdfWrapper: FC = () => {
   );
 };
 
-export default EditPdfWrapper;
+export default CropWrapper;

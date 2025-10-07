@@ -1,41 +1,61 @@
 "use client";
 
 import { FC, useState } from "react";
-import { Edit, Download, Loader2 } from "lucide-react";
+import { Hash, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import ToolLayout from "@/components/tools/ToolLayout";
 
-const EditPdfWrapper: FC = () => {
+const PageNumbersPdfWrapper: FC = () => {
   const [files, setFiles] = useState<File[]>([]);
-  const [editing, setEditing] = useState(false);
+  const [processing, setProcessing] = useState(false);
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
-  const [text, setText] = useState("");
-  const [fontSize, setFontSize] = useState("14");
+  const [position, setPosition] = useState("bottom-center");
 
-  const handleEdit = async () => {
-    if (files.length === 0 || !text) return;
+  const handleProcess = async () => {
+    if (files.length === 0) return;
 
-    setEditing(true);
+    setProcessing(true);
     try {
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();
       const pdfDoc = await PDFDocument.load(arrayBuffer);
       const pages = pdfDoc.getPages();
-      const firstPage = pages[0];
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const size = Number.parseInt(fontSize);
+      const fontSize = 12;
 
-      const { width, height } = firstPage.getSize();
-      firstPage.drawText(text, {
-        x: 50,
-        y: height - 50,
-        size,
-        font,
-        color: rgb(0, 0, 0),
+      pages.forEach((page, index) => {
+        const { width, height } = page.getSize();
+        const pageNumber = `${index + 1}`;
+        const textWidth = font.widthOfTextAtSize(pageNumber, fontSize);
+
+        let x = width / 2 - textWidth / 2;
+        let y = 20;
+
+        if (position.includes("top")) {
+          y = height - 30;
+        }
+        if (position.includes("left")) {
+          x = 30;
+        } else if (position.includes("right")) {
+          x = width - 30 - textWidth;
+        }
+
+        page.drawText(pageNumber, {
+          x,
+          y,
+          size: fontSize,
+          font,
+          color: rgb(0, 0, 0),
+        });
       });
 
       const pdfBytes = await pdfDoc.save();
@@ -45,10 +65,10 @@ const EditPdfWrapper: FC = () => {
       const url = URL.createObjectURL(blob);
       setProcessedUrl(url);
     } catch (error) {
-      console.error("Error editing PDF:", error);
-      alert("Failed to edit PDF. Please try again.");
+      console.error("Error adding page numbers:", error);
+      alert("Failed to add page numbers. Please try again.");
     } finally {
-      setEditing(false);
+      setProcessing(false);
     }
   };
 
@@ -56,15 +76,15 @@ const EditPdfWrapper: FC = () => {
     if (!processedUrl) return;
     const link = document.createElement("a");
     link.href = processedUrl;
-    link.download = "edited.pdf";
+    link.download = "numbered.pdf";
     link.click();
   };
 
   return (
     <ToolLayout
-      title="Edit PDF"
-      description="Add text to your PDF"
-      icon={<Edit className="w-8 h-8" />}
+      title="Add Page Numbers"
+      description="Add page numbers to your PDF documents"
+      icon={<Hash className="w-8 h-8" />}
       files={files}
       onFilesChange={setFiles}
       acceptedFileTypes=".pdf"
@@ -74,39 +94,34 @@ const EditPdfWrapper: FC = () => {
       {files.length > 0 && !processedUrl && (
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="text">Text to Add</Label>
-            <Textarea
-              id="text"
-              placeholder="Enter text to add to PDF..."
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              className="min-h-32"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="fontSize">Font Size</Label>
-            <Input
-              id="fontSize"
-              type="number"
-              min="8"
-              max="72"
-              value={fontSize}
-              onChange={(e) => setFontSize(e.target.value)}
-            />
+            <Label htmlFor="position">Position</Label>
+            <Select value={position} onValueChange={setPosition}>
+              <SelectTrigger id="position">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="top-left">Top Left</SelectItem>
+                <SelectItem value="top-center">Top Center</SelectItem>
+                <SelectItem value="top-right">Top Right</SelectItem>
+                <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                <SelectItem value="bottom-center">Bottom Center</SelectItem>
+                <SelectItem value="bottom-right">Bottom Right</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <Button
-            onClick={handleEdit}
-            disabled={editing || !text}
+            onClick={handleProcess}
+            disabled={processing}
             className="w-full bg-primary hover:bg-primary/90"
             size="lg"
           >
-            {editing ? (
+            {processing ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Editing...
+                Adding Numbers...
               </>
             ) : (
-              "Apply Edits"
+              "Add Page Numbers"
             )}
           </Button>
         </div>
@@ -118,26 +133,25 @@ const EditPdfWrapper: FC = () => {
             <Download className="w-8 h-8 text-green-500" />
           </div>
           <h3 className="text-xl font-semibold mb-2">
-            PDF Edited Successfully!
+            Page Numbers Added Successfully!
           </h3>
           <p className="text-muted-foreground mb-6">
-            Your edited PDF is ready to download.
+            Your numbered PDF is ready to download.
           </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={handleDownload} size="lg">
               <Download className="w-4 h-4 mr-2" />
-              Download Edited PDF
+              Download PDF
             </Button>
             <Button
               variant="outline"
               onClick={() => {
                 setFiles([]);
                 setProcessedUrl(null);
-                setText("");
               }}
               size="lg"
             >
-              Edit Another PDF
+              Add More Numbers
             </Button>
           </div>
         </div>
@@ -146,4 +160,4 @@ const EditPdfWrapper: FC = () => {
   );
 };
 
-export default EditPdfWrapper;
+export default PageNumbersPdfWrapper;

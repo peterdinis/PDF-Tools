@@ -2,7 +2,7 @@ import ProtectWrapper from "@/components/pdfs/protect/ProtectWrapper";
 import { NextPage } from "next";
 
 const ProtectPdfPage: NextPage = () => {
-    return <ProtectWrapper />
-}
+  return <ProtectWrapper />;
+};
 
-export default ProtectPdfPage
+export default ProtectPdfPage;
