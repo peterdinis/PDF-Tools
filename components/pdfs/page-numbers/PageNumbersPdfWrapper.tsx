@@ -1,46 +1,52 @@
-"use client"
+"use client";
 
-import { FC, useState } from "react"
-import { Hash, Download, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib"
-import ToolLayout from "@/components/tools/ToolLayout"
+import { FC, useState } from "react";
+import { Hash, Download, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import ToolLayout from "@/components/tools/ToolLayout";
 
 const PageNumbersPdfWrapper: FC = () => {
-  const [files, setFiles] = useState<File[]>([])
-  const [processing, setProcessing] = useState(false)
-  const [processedUrl, setProcessedUrl] = useState<string | null>(null)
-  const [position, setPosition] = useState("bottom-center")
+  const [files, setFiles] = useState<File[]>([]);
+  const [processing, setProcessing] = useState(false);
+  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
+  const [position, setPosition] = useState("bottom-center");
 
   const handleProcess = async () => {
-    if (files.length === 0) return
+    if (files.length === 0) return;
 
-    setProcessing(true)
+    setProcessing(true);
     try {
-      const file = files[0]
-      const arrayBuffer = await file.arrayBuffer()
-      const pdfDoc = await PDFDocument.load(arrayBuffer)
-      const pages = pdfDoc.getPages()
-      const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
-      const fontSize = 12
+      const file = files[0];
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const pages = pdfDoc.getPages();
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const fontSize = 12;
 
       pages.forEach((page, index) => {
-        const { width, height } = page.getSize()
-        const pageNumber = `${index + 1}`
-        const textWidth = font.widthOfTextAtSize(pageNumber, fontSize)
+        const { width, height } = page.getSize();
+        const pageNumber = `${index + 1}`;
+        const textWidth = font.widthOfTextAtSize(pageNumber, fontSize);
 
-        let x = width / 2 - textWidth / 2
-        let y = 20
+        let x = width / 2 - textWidth / 2;
+        let y = 20;
 
         if (position.includes("top")) {
-          y = height - 30
+          y = height - 30;
         }
         if (position.includes("left")) {
-          x = 30
+          x = 30;
         } else if (position.includes("right")) {
-          x = width - 30 - textWidth
+          x = width - 30 - textWidth;
         }
 
         page.drawText(pageNumber, {
@@ -49,28 +55,30 @@ const PageNumbersPdfWrapper: FC = () => {
           size: fontSize,
           font,
           color: rgb(0, 0, 0),
-        })
-      })
+        });
+      });
 
-      const pdfBytes = await pdfDoc.save()
-      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" })
-      const url = URL.createObjectURL(blob)
-      setProcessedUrl(url)
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as unknown as BlobPart], {
+        type: "application/pdf",
+      });
+      const url = URL.createObjectURL(blob);
+      setProcessedUrl(url);
     } catch (error) {
-      console.error("Error adding page numbers:", error)
-      alert("Failed to add page numbers. Please try again.")
+      console.error("Error adding page numbers:", error);
+      alert("Failed to add page numbers. Please try again.");
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
   const handleDownload = () => {
-    if (!processedUrl) return
-    const link = document.createElement("a")
-    link.href = processedUrl
-    link.download = "numbered.pdf"
-    link.click()
-  }
+    if (!processedUrl) return;
+    const link = document.createElement("a");
+    link.href = processedUrl;
+    link.download = "numbered.pdf";
+    link.click();
+  };
 
   return (
     <ToolLayout
@@ -124,8 +132,12 @@ const PageNumbersPdfWrapper: FC = () => {
           <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
             <Download className="w-8 h-8 text-green-500" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">Page Numbers Added Successfully!</h3>
-          <p className="text-muted-foreground mb-6">Your numbered PDF is ready to download.</p>
+          <h3 className="text-xl font-semibold mb-2">
+            Page Numbers Added Successfully!
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Your numbered PDF is ready to download.
+          </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={handleDownload} size="lg">
               <Download className="w-4 h-4 mr-2" />
@@ -134,8 +146,8 @@ const PageNumbersPdfWrapper: FC = () => {
             <Button
               variant="outline"
               onClick={() => {
-                setFiles([])
-                setProcessedUrl(null)
+                setFiles([]);
+                setProcessedUrl(null);
               }}
               size="lg"
             >
@@ -145,7 +157,7 @@ const PageNumbersPdfWrapper: FC = () => {
         </div>
       )}
     </ToolLayout>
-  )
-}
+  );
+};
 
-export default PageNumbersPdfWrapper
+export default PageNumbersPdfWrapper;

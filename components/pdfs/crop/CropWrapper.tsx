@@ -1,66 +1,79 @@
-"use client"
+"use client";
 
-import { FC, useState } from "react"
-import { Crop, Download, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { PDFDocument } from "pdf-lib"
-import ToolLayout from "@/components/tools/ToolLayout"
+import { FC, useState } from "react";
+import { Crop, Download, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PDFDocument } from "pdf-lib";
+import ToolLayout from "@/components/tools/ToolLayout";
 
 const CropWrapper: FC = () => {
-  const [files, setFiles] = useState<File[]>([])
-  const [processing, setProcessing] = useState(false)
-  const [processedUrl, setProcessedUrl] = useState<string | null>(null)
-  const [cropSize, setCropSize] = useState("a4")
+  const [files, setFiles] = useState<File[]>([]);
+  const [processing, setProcessing] = useState(false);
+  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
+  const [cropSize, setCropSize] = useState("a4");
 
   const handleProcess = async () => {
-    if (files.length === 0) return
+    if (files.length === 0) return;
 
-    setProcessing(true)
+    setProcessing(true);
     try {
-      const file = files[0]
-      const arrayBuffer = await file.arrayBuffer()
-      const pdfDoc = await PDFDocument.load(arrayBuffer)
-      const pages = pdfDoc.getPages()
+      const file = files[0];
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      const pages = pdfDoc.getPages();
 
       const sizes: Record<string, { width: number; height: number }> = {
         a4: { width: 595, height: 842 },
         letter: { width: 612, height: 792 },
         legal: { width: 612, height: 1008 },
-      }
+      };
 
-      const targetSize = sizes[cropSize]
+      const targetSize = sizes[cropSize];
 
       pages.forEach((page) => {
-        const { width, height } = page.getSize()
+        const { width, height } = page.getSize();
 
         // Calculate crop box to center the content
-        const x = Math.max(0, (width - targetSize.width) / 2)
-        const y = Math.max(0, (height - targetSize.height) / 2)
+        const x = Math.max(0, (width - targetSize.width) / 2);
+        const y = Math.max(0, (height - targetSize.height) / 2);
 
-        page.setCropBox(x, y, Math.min(targetSize.width, width), Math.min(targetSize.height, height))
-      })
+        page.setCropBox(
+          x,
+          y,
+          Math.min(targetSize.width, width),
+          Math.min(targetSize.height, height),
+        );
+      });
 
-      const pdfBytes = await pdfDoc.save()
-      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" })
-      const url = URL.createObjectURL(blob)
-      setProcessedUrl(url)
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as unknown as BlobPart], {
+        type: "application/pdf",
+      });
+      const url = URL.createObjectURL(blob);
+      setProcessedUrl(url);
     } catch (error) {
-      console.error("Error cropping PDF:", error)
-      alert("Failed to crop PDF. Please try again.")
+      console.error("Error cropping PDF:", error);
+      alert("Failed to crop PDF. Please try again.");
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
   const handleDownload = () => {
-    if (!processedUrl) return
-    const link = document.createElement("a")
-    link.href = processedUrl
-    link.download = "cropped.pdf"
-    link.click()
-  }
+    if (!processedUrl) return;
+    const link = document.createElement("a");
+    link.href = processedUrl;
+    link.download = "cropped.pdf";
+    link.click();
+  };
 
   return (
     <ToolLayout
@@ -111,8 +124,12 @@ const CropWrapper: FC = () => {
           <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
             <Download className="w-8 h-8 text-green-500" />
           </div>
-          <h3 className="text-xl font-semibold mb-2">PDF Cropped Successfully!</h3>
-          <p className="text-muted-foreground mb-6">Your cropped PDF is ready to download.</p>
+          <h3 className="text-xl font-semibold mb-2">
+            PDF Cropped Successfully!
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Your cropped PDF is ready to download.
+          </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={handleDownload} size="lg">
               <Download className="w-4 h-4 mr-2" />
@@ -121,8 +138,8 @@ const CropWrapper: FC = () => {
             <Button
               variant="outline"
               onClick={() => {
-                setFiles([])
-                setProcessedUrl(null)
+                setFiles([]);
+                setProcessedUrl(null);
               }}
               size="lg"
             >
@@ -132,8 +149,7 @@ const CropWrapper: FC = () => {
         </div>
       )}
     </ToolLayout>
-  )
-}
+  );
+};
 
-
-export default CropWrapper
+export default CropWrapper;

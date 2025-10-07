@@ -1,79 +1,84 @@
-"use client"
+"use client";
 
-import { FC, useState } from "react"
-import { ScanLine } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { PDFDocument } from "pdf-lib"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import ToolLayout from "@/components/tools/ToolLayout"
+import { FC, useState } from "react";
+import { ScanLine } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PDFDocument } from "pdf-lib";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import ToolLayout from "@/components/tools/ToolLayout";
 
-type PageSize = "a4" | "letter" | "legal"
+type PageSize = "a4" | "letter" | "legal";
 
 const ScanWrapper: FC = () => {
-  const [files, setFiles] = useState<File[]>([])
-  const [processing, setProcessing] = useState(false)
-  const [pageSize, setPageSize] = useState<PageSize>("a4")
+  const [files, setFiles] = useState<File[]>([]);
+  const [processing, setProcessing] = useState(false);
+  const [pageSize, setPageSize] = useState<PageSize>("a4");
 
   const pageSizes = {
     a4: { width: 595, height: 842 },
     letter: { width: 612, height: 792 },
     legal: { width: 612, height: 1008 },
-  }
+  };
 
   const handleProcess = async () => {
-    if (files.length === 0) return
+    if (files.length === 0) return;
 
-    setProcessing(true)
+    setProcessing(true);
 
     try {
-      const pdfDoc = await PDFDocument.create()
-      const size = pageSizes[pageSize]
+      const pdfDoc = await PDFDocument.create();
+      const size = pageSizes[pageSize];
 
       for (const file of files) {
-        const imageBytes = await file.arrayBuffer()
-        let image
+        const imageBytes = await file.arrayBuffer();
+        let image;
 
         if (file.type === "image/png") {
-          image = await pdfDoc.embedPng(imageBytes)
+          image = await pdfDoc.embedPng(imageBytes);
         } else if (file.type === "image/jpeg" || file.type === "image/jpg") {
-          image = await pdfDoc.embedJpg(imageBytes)
+          image = await pdfDoc.embedJpg(imageBytes);
         } else {
-          continue
+          continue;
         }
 
-        const page = pdfDoc.addPage([size.width, size.height])
-        const { width: imgWidth, height: imgHeight } = image.scale(1)
+        const page = pdfDoc.addPage([size.width, size.height]);
+        const { width: imgWidth, height: imgHeight } = image.scale(1);
 
         // Calculate scaling to fit page while maintaining aspect ratio
-        const scale = Math.min((size.width - 40) / imgWidth, (size.height - 40) / imgHeight)
+        const scale = Math.min(
+          (size.width - 40) / imgWidth,
+          (size.height - 40) / imgHeight,
+        );
 
-        const scaledWidth = imgWidth * scale
-        const scaledHeight = imgHeight * scale
+        const scaledWidth = imgWidth * scale;
+        const scaledHeight = imgHeight * scale;
 
         page.drawImage(image, {
           x: (size.width - scaledWidth) / 2,
           y: (size.height - scaledHeight) / 2,
           width: scaledWidth,
           height: scaledHeight,
-        })
+        });
       }
 
-      const pdfBytes = await pdfDoc.save()
-      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = "scanned-document.pdf"
-      a.click()
-      URL.revokeObjectURL(url)
+      const pdfBytes = await pdfDoc.save();
+      const blob = new Blob([pdfBytes as unknown as BlobPart], {
+        type: "application/pdf",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "scanned-document.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error creating PDF:", error)
-      alert("Error creating PDF. Please try again.")
+      console.error("Error creating PDF:", error);
+      alert("Error creating PDF. Please try again.");
     } finally {
-      setProcessing(false)
+      setProcessing(false);
     }
-  }
+  };
 
   return (
     <ToolLayout
@@ -90,7 +95,10 @@ const ScanWrapper: FC = () => {
         <div className="space-y-6">
           <div className="space-y-3">
             <Label className="text-base font-semibold">Page Size</Label>
-            <RadioGroup value={pageSize} onValueChange={(v) => setPageSize(v as PageSize)}>
+            <RadioGroup
+              value={pageSize}
+              onValueChange={(v) => setPageSize(v as PageSize)}
+            >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="a4" id="a4" />
                 <Label htmlFor="a4" className="font-normal cursor-pointer">
@@ -118,14 +126,18 @@ const ScanWrapper: FC = () => {
             </p>
           </div>
 
-          <Button onClick={handleProcess} disabled={processing} className="w-full" size="lg">
+          <Button
+            onClick={handleProcess}
+            disabled={processing}
+            className="w-full"
+            size="lg"
+          >
             {processing ? "Creating PDF..." : "Create PDF"}
           </Button>
         </div>
       )}
     </ToolLayout>
-  )
-}
+  );
+};
 
-
-export default ScanWrapper
+export default ScanWrapper;

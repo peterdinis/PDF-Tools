@@ -2,7 +2,7 @@ import RotateWrapper from "@/components/pdfs/rotate/RotateWrapper";
 import { NextPage } from "next";
 
 const RotatePdfPage: NextPage = () => {
-    return <RotateWrapper />
-}
+  return <RotateWrapper />;
+};
 
-export default RotatePdfPage
+export default RotatePdfPage;

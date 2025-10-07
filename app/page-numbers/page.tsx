@@ -2,7 +2,7 @@ import PageNumbersPdfWrapper from "@/components/pdfs/page-numbers/PageNumbersPdf
 import { NextPage } from "next";
 
 const PageNumbersPdfPage: NextPage = () => {
-    return <PageNumbersPdfWrapper />
-}
+  return <PageNumbersPdfWrapper />;
+};
 
-export default PageNumbersPdfPage
+export default PageNumbersPdfPage;
