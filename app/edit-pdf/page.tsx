@@ -1,9 +1,8 @@
+import EditPdfWrapper from "@/components/pdfs/edit-pdf/EditPdfWrapper";
 import { NextPage } from "next";
 
 const EditPdfPage: NextPage = () => {
-    return (
-
-    )
+    return <EditPdfWrapper />
 }
 
 export default EditPdfPage
