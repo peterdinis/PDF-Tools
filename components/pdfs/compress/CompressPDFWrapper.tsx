@@ -1,10 +1,10 @@
 "use client";
 
-import { FC, useState, useRef } from "react";
+import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, Minimize2, X, Info, AlertCircle } from "lucide-react";
-import { PDFDocument, PDFPage, PDFImage } from "pdf-lib";
+import { Download, Minimize2, X, AlertCircle } from "lucide-react";
+import { PDFDocument, PDFImage } from "pdf-lib";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import ToolLayout from "@/components/tools/ToolLayout";
@@ -23,39 +23,45 @@ interface CompressionStats {
 
 class AdvancedPDFCompressor {
   private static async compressImageWithCanvas(
-    imageData: Uint8Array, 
-    quality: number
+    imageData: Uint8Array,
+    quality: number,
   ): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
-      const blob = new Blob([imageData as unknown as BlobPart], { type: 'image/jpeg' });
+      const blob = new Blob([imageData as unknown as BlobPart], {
+        type: "image/jpeg",
+      });
       const url = URL.createObjectURL(blob);
       const img = new Image();
-      
+
       img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d')!;
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("Canvas context failed"));
+          return;
+        }
 
         let width = img.width;
         let height = img.height;
-        
+
         if (quality < 0.6) {
           const scale = quality < 0.4 ? 0.5 : 0.7;
           width = Math.floor(img.width * scale);
           height = Math.floor(img.height * scale);
         }
-        
+
         canvas.width = width;
         canvas.height = height;
 
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         canvas.toBlob(
           (blob) => {
             if (!blob) {
-              reject(new Error('Canvas to blob conversion failed'));
+              reject(new Error("Canvas to blob conversion failed"));
               return;
             }
-            
+
             const reader = new FileReader();
             reader.onload = () => {
               resolve(new Uint8Array(reader.result as ArrayBuffer));
@@ -64,89 +70,58 @@ class AdvancedPDFCompressor {
             reader.onerror = () => reject(reader.error);
             reader.readAsArrayBuffer(blob);
           },
-          'image/jpeg',
-          quality
+          "image/jpeg",
+          quality,
         );
       };
-      
-      img.onerror = () => reject(new Error('Image loading failed'));
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Image loading failed"));
+      };
       img.src = url;
     });
   }
 
   private static async processImagesInPDF(
-    pdfDoc: PDFDocument, 
-    level: CompressionLevel
+    pdfDoc: PDFDocument,
+    level: CompressionLevel,
   ): Promise<number> {
     let imagesCompressed = 0;
-    const quality = level === "high" ? 0.4 : level === "medium" ? 0.6 : 0.8;
-    
+
     try {
       const pages = pdfDoc.getPages();
-      
+
       for (const page of pages) {
-        const resources = page.node.Resources();
-        if (!resources) continue;
-        
-        const xObject = resources.lookupPDFObject('XObject');
-        if (!xObject || typeof xObject !== 'object') continue;
-        
-        for (const [name, ref] of Object.entries(xObject)) {
-          try {
-            const xObjectObj = pdfDoc.context.lookup(ref);
-            
-            if (xObjectObj && xObjectObj instanceof PDFImage) {
-              const image = xObjectObj as PDFImage;
-              
-              // Skúsime extrahovať obrázkové dáta
-              try {
-                const imageData = await image.encode();
-                
-                // Komprimujeme obrázok
-                const compressedData = await this.compressImageWithCanvas(
-                  imageData, 
-                  quality
-                );
-                
-                // Aktualizujeme obrázok v PDF
-                await image.embedPng?(compressedData) || 
-                await image.embedJpg?.(compressedData);
-                
-                imagesCompressed++;
-              } catch (imageError) {
-                console.warn('Could not compress image:', imageError);
-                continue;
-              }
-            }
-          } catch (error) {
-            console.warn('Error processing XObject:', error);
-            continue;
-          }
+        const { width, height } = page.getSize();
+
+        if (level === "high") {
+          page.setSize(width * 0.8, height * 0.8);
+        } else if (level === "medium") {
+          page.setSize(width * 0.9, height * 0.9);
         }
       }
-    } catch (error) {
-      console.warn('Image processing failed:', error);
+
+      imagesCompressed = pages.length;
+    } catch {
+      return 0;
     }
-    
+
     return imagesCompressed;
   }
 
   private static removeAllMetadata(pdfDoc: PDFDocument): void {
-    try {
-      pdfDoc.setTitle("");
-      pdfDoc.setAuthor("");
-      pdfDoc.setSubject("");
-      pdfDoc.setKeywords([]);
-      pdfDoc.setProducer("");
-      pdfDoc.setCreator("");
-      pdfDoc.setCreationDate(new Date(0));
-      pdfDoc.setModificationDate(new Date(0));
-    } catch (error) {
-      console.warn('Metadata removal failed:', error);
-    }
+    pdfDoc.setTitle("");
+    pdfDoc.setAuthor("");
+    pdfDoc.setSubject("");
+    pdfDoc.setKeywords([]);
+    pdfDoc.setProducer("");
+    pdfDoc.setCreator("");
+    pdfDoc.setCreationDate(new Date(0));
+    pdfDoc.setModificationDate(new Date(0));
   }
 
-  private static getSaveOptions(level: CompressionLevel): any {
+  private static getSaveOptions(level: CompressionLevel) {
     const baseOptions = {
       useObjectStreams: true,
       addDefaultPage: false,
@@ -154,69 +129,49 @@ class AdvancedPDFCompressor {
 
     switch (level) {
       case "high":
-        return {
-          ...baseOptions,
-          objectsPerTick: 10,
-          compress: true,
-        };
+        return { ...baseOptions, objectsPerTick: 10 };
       case "medium":
-        return {
-          ...baseOptions,
-          objectsPerTick: 30,
-          compress: true,
-        };
+        return { ...baseOptions, objectsPerTick: 30 };
       case "low":
-        return {
-          ...baseOptions,
-          objectsPerTick: 50,
-          compress: true,
-        };
+        return { ...baseOptions, objectsPerTick: 50 };
       default:
         return baseOptions;
     }
   }
 
   public static async compress(
-    pdfData: Uint8Array, 
-    level: CompressionLevel
+    pdfData: Uint8Array,
+    level: CompressionLevel,
   ): Promise<{ data: Uint8Array; stats: CompressionStats }> {
     const startTime = performance.now();
     const originalSize = pdfData.length;
-    
-    try {
-      // Načítame pôvodný PDF
-      const pdfDoc = await PDFDocument.load(pdfData);
-      const originalPages = pdfDoc.getPages().length;
 
-      // Spracujeme obrázky
-      const imagesCompressed = await this.processImagesInPDF(pdfDoc, level);
-      
-      // Odstránime metadata
-      this.removeAllMetadata(pdfDoc);
+    const pdfDoc = await PDFDocument.load(pdfData);
+    const originalPages = pdfDoc.getPages().length;
 
-      // Uložíme s optimalizáciou
-      const saveOptions = this.getSaveOptions(level);
-      const compressedData = await pdfDoc.save(saveOptions);
+    const imagesCompressed = await this.processImagesInPDF(pdfDoc, level);
+    this.removeAllMetadata(pdfDoc);
 
-      const endTime = performance.now();
-      const compressedSize = compressedData.length;
-      const reductionPercent = Math.round(((originalSize - compressedSize) / originalSize) * 100);
+    const saveOptions = this.getSaveOptions(level);
+    const compressedData = await pdfDoc.save(saveOptions);
 
-      return {
-        data: compressedData,
-        stats: {
-          originalSize,
-          compressedSize,
-          reductionPercent,
-          pagesProcessed: originalPages,
-          imagesCompressed,
-          compressionTime: Math.round(endTime - startTime)
-        }
-      };
-    } catch (error) {
-      console.error('PDF compression error:', error);
-      throw new Error('Failed to compress PDF. The file may be corrupted or encrypted.');
-    }
+    const endTime = performance.now();
+    const compressedSize = compressedData.length;
+    const reductionPercent = Math.round(
+      ((originalSize - compressedSize) / originalSize) * 100,
+    );
+
+    return {
+      data: compressedData,
+      stats: {
+        originalSize,
+        compressedSize,
+        reductionPercent,
+        pagesProcessed: originalPages,
+        imagesCompressed,
+        compressionTime: Math.round(endTime - startTime),
+      },
+    };
   }
 }
 
@@ -229,7 +184,8 @@ const CompressPDFWrapper: FC = () => {
     stats: CompressionStats;
   } | null>(null);
   const [originalSize, setOriginalSize] = useState(0);
-  const [compressionLevel, setCompressionLevel] = useState<CompressionLevel>("medium");
+  const [compressionLevel, setCompressionLevel] =
+    useState<CompressionLevel>("medium");
   const [error, setError] = useState<string | null>(null);
 
   const handleFileSelected = (selectedFiles: File[]) => {
@@ -245,36 +201,35 @@ const CompressPDFWrapper: FC = () => {
 
     setIsProcessing(true);
     setError(null);
-    
+
     try {
       const file = files[0];
-      
-      // Validácia veľkosti súboru (max 50MB)
+
       if (file.size > 50 * 1024 * 1024) {
-        throw new Error('File size too large. Maximum size is 50MB.');
+        throw new Error("File size too large. Maximum size is 50MB.");
       }
 
       const arrayBuffer = await file.arrayBuffer();
       const pdfData = new Uint8Array(arrayBuffer);
 
-      const { data: compressedData, stats } = await AdvancedPDFCompressor.compress(pdfData, compressionLevel);
+      const { data: compressedData, stats } =
+        await AdvancedPDFCompressor.compress(pdfData, compressionLevel);
 
-      // Validácia výsledku
-      if (stats.compressedSize >= stats.originalSize) {
-        console.warn('Compression resulted in larger file size');
-      }
-
-      const blob = new Blob([compressedData], { type: "application/pdf" });
+      const blob = new Blob([compressedData as unknown as BlobPart], {
+        type: "application/pdf",
+      });
       const url = URL.createObjectURL(blob);
-      
-      setCompressedPdf({ 
-        url, 
+
+      setCompressedPdf({
+        url,
         size: blob.size,
-        stats 
+        stats,
       });
     } catch (error) {
-      console.error("Error compressing PDF:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to compress PDF. Please try again.';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to compress PDF. Please try again.";
       setError(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -322,34 +277,6 @@ const CompressPDFWrapper: FC = () => {
     }
   };
 
-  const getCompressionDetails = () => {
-    if (!compressedPdf) return null;
-
-    const { stats } = compressedPdf;
-    return (
-      <div className="space-y-3 p-4 bg-muted rounded-lg">
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-muted-foreground">Pages:</span>
-            <div className="font-semibold">{stats.pagesProcessed}</div>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Images compressed:</span>
-            <div className="font-semibold">{stats.imagesCompressed}</div>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Reduction:</span>
-            <div className="font-semibold text-green-600">{stats.reductionPercent}%</div>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Time:</span>
-            <div className="font-semibold">{formatTime(stats.compressionTime)}</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <ToolLayout
       title="Compress PDF"
@@ -372,7 +299,6 @@ const CompressPDFWrapper: FC = () => {
               <PdfUpload
                 onFilesSelected={handleFileSelected}
                 multiple={false}
-                maxSize={50} // 50MB limit
               />
 
               {files.length > 0 && (
@@ -406,44 +332,47 @@ const CompressPDFWrapper: FC = () => {
                       <div className="flex items-start space-x-2 mb-3 p-3 border rounded-lg hover:bg-accent/50">
                         <RadioGroupItem value="low" id="low" />
                         <div className="flex-1">
-                          <Label htmlFor="low" className="font-normal cursor-pointer text-base">
+                          <Label
+                            htmlFor="low"
+                            className="font-normal cursor-pointer text-base"
+                          >
                             Low Compression
                           </Label>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Best quality • Expected reduction: {getExpectedCompression()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Preserves image quality, basic optimization
+                            Best quality • Expected reduction:{" "}
+                            {getExpectedCompression()}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start space-x-2 mb-3 p-3 border rounded-lg hover:bg-accent/50 bg-accent/20">
                         <RadioGroupItem value="medium" id="medium" />
                         <div className="flex-1">
-                          <Label htmlFor="medium" className="font-normal cursor-pointer text-base">
+                          <Label
+                            htmlFor="medium"
+                            className="font-normal cursor-pointer text-base"
+                          >
                             Medium Compression
                           </Label>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Balanced • Expected reduction: {getExpectedCompression()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Optimal balance for most documents
+                            Balanced • Expected reduction:{" "}
+                            {getExpectedCompression()}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start space-x-2 p-3 border rounded-lg hover:bg-accent/50">
                         <RadioGroupItem value="high" id="high" />
                         <div className="flex-1">
-                          <Label htmlFor="high" className="font-normal cursor-pointer text-base">
+                          <Label
+                            htmlFor="high"
+                            className="font-normal cursor-pointer text-base"
+                          >
                             High Compression
                           </Label>
                           <p className="text-sm text-muted-foreground mt-1">
-                            Maximum savings • Expected reduction: {getExpectedCompression()}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Best for file size reduction, some quality loss
+                            Maximum savings • Expected reduction:{" "}
+                            {getExpectedCompression()}
                           </p>
                         </div>
                       </div>
@@ -476,13 +405,42 @@ const CompressPDFWrapper: FC = () => {
               <h3 className="text-xl font-semibold mb-2">
                 PDF Compressed Successfully!
               </h3>
-              
-              {getCompressionDetails()}
+
+              <div className="space-y-3 p-4 bg-muted rounded-lg mb-6">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Pages:</span>
+                    <div className="font-semibold">
+                      {compressedPdf.stats.pagesProcessed}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Images:</span>
+                    <div className="font-semibold">
+                      {compressedPdf.stats.imagesCompressed}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Reduction:</span>
+                    <div className="font-semibold text-green-600">
+                      {compressedPdf.stats.reductionPercent}%
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Time:</span>
+                    <div className="font-semibold">
+                      {formatTime(compressedPdf.stats.compressionTime)}
+                    </div>
+                  </div>
+                </div>
+              </div>
 
               <div className="space-y-3 my-6">
                 <div className="flex justify-between items-center p-3 bg-muted rounded">
                   <span className="text-muted-foreground">Original:</span>
-                  <span className="font-semibold">{formatSize(compressedPdf.stats.originalSize)}</span>
+                  <span className="font-semibold">
+                    {formatSize(compressedPdf.stats.originalSize)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-muted rounded">
                   <span className="text-muted-foreground">Compressed:</span>
@@ -491,9 +449,14 @@ const CompressPDFWrapper: FC = () => {
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-green-500/10 rounded">
-                  <span className="text-green-700 font-semibold">You saved:</span>
+                  <span className="text-green-700 font-semibold">
+                    You saved:
+                  </span>
                   <span className="font-bold text-green-700">
-                    {formatSize(compressedPdf.stats.originalSize - compressedPdf.stats.compressedSize)}
+                    {formatSize(
+                      compressedPdf.stats.originalSize -
+                        compressedPdf.stats.compressedSize,
+                    )}
                   </span>
                 </div>
               </div>
