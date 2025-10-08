@@ -212,7 +212,7 @@ const SplitPDFWrapper: FC = () => {
                     </div>
                   )}
 
-                  <div className="flex gap-3">
+                  <div className="flex flex-col">
                     <Button
                       onClick={handleSplitPDF}
                       disabled={isProcessing}
@@ -226,7 +226,7 @@ const SplitPDFWrapper: FC = () => {
                       variant="outline"
                       onClick={handleClearAll}
                       disabled={isProcessing}
-                      className="w-full"
+                      className="w-full mt-2"
                       size="lg"
                     >
                       <XCircle className="w-4 h-4 mr-2" />
