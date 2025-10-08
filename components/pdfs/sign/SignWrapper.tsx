@@ -8,34 +8,46 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import ToolLayout from "@/components/tools/ToolLayout";
 
-type SignatureType = 'draw' | 'type' | 'upload';
-type SignaturePosition = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left' | 'custom';
+type SignatureType = "draw" | "type" | "upload";
+type SignaturePosition =
+  | "bottom-right"
+  | "bottom-left"
+  | "top-right"
+  | "top-left"
+  | "custom";
 
 const SignWrapper: FC = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [signing, setSigning] = useState(false);
   const [signed, setSigned] = useState(false);
   const [signedPdfUrl, setSignedPdfUrl] = useState<string>("");
-  const [signatureType, setSignatureType] = useState<SignatureType>('draw');
-  const [signaturePosition, setSignaturePosition] = useState<SignaturePosition>('bottom-right');
+  const [signatureType, setSignatureType] = useState<SignatureType>("draw");
+  const [signaturePosition, setSignaturePosition] =
+    useState<SignaturePosition>("bottom-right");
   const [customX, setCustomX] = useState("50");
   const [customY, setCustomY] = useState("50");
   const [selectedPage, setSelectedPage] = useState<number>(1);
-  
+
   // Drawing signature
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
-  
+
   // Typed signature
   const [typedSignature, setTypedSignature] = useState("");
   const [fontSize, setFontSize] = useState("24");
   const [fontFamily, setFontFamily] = useState("Helvetica");
-  
+
   // Uploaded signature
   const [uploadedSignature, setUploadedSignature] = useState<File | null>(null);
 
@@ -91,7 +103,7 @@ const SignWrapper: FC = () => {
   };
 
   const clearSignature = () => {
-    if (signatureType === 'draw') {
+    if (signatureType === "draw") {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
@@ -100,22 +112,22 @@ const SignWrapper: FC = () => {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       setHasSignature(false);
-    } else if (signatureType === 'type') {
+    } else if (signatureType === "type") {
       setTypedSignature("");
-    } else if (signatureType === 'upload') {
+    } else if (signatureType === "upload") {
       setUploadedSignature(null);
     }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       setUploadedSignature(file);
     }
   };
 
   const getSignatureImage = async (): Promise<Uint8Array | null> => {
-    if (signatureType === 'draw') {
+    if (signatureType === "draw") {
       const canvas = canvasRef.current;
       if (!canvas || !hasSignature) return null;
 
@@ -124,7 +136,7 @@ const SignWrapper: FC = () => {
         res.arrayBuffer(),
       );
       return new Uint8Array(signatureImageBytes);
-    } else if (signatureType === 'upload' && uploadedSignature) {
+    } else if (signatureType === "upload" && uploadedSignature) {
       const signatureImageBytes = await uploadedSignature.arrayBuffer();
       return new Uint8Array(signatureImageBytes);
     }
@@ -137,18 +149,21 @@ const SignWrapper: FC = () => {
     const signatureHeight = 50;
 
     switch (signaturePosition) {
-      case 'bottom-right':
+      case "bottom-right":
         return { x: pageWidth - signatureWidth - margin, y: margin };
-      case 'bottom-left':
+      case "bottom-left":
         return { x: margin, y: margin };
-      case 'top-right':
-        return { x: pageWidth - signatureWidth - margin, y: pageHeight - signatureHeight - margin };
-      case 'top-left':
+      case "top-right":
+        return {
+          x: pageWidth - signatureWidth - margin,
+          y: pageHeight - signatureHeight - margin,
+        };
+      case "top-left":
         return { x: margin, y: pageHeight - signatureHeight - margin };
-      case 'custom':
-        return { 
-          x: Number.parseInt(customX), 
-          y: Number.parseInt(customY) 
+      case "custom":
+        return {
+          x: Number.parseInt(customX),
+          y: Number.parseInt(customY),
         };
       default:
         return { x: pageWidth - signatureWidth - margin, y: margin };
@@ -159,9 +174,9 @@ const SignWrapper: FC = () => {
     if (files.length === 0) return;
 
     // Validation based on signature type
-    if (signatureType === 'draw' && !hasSignature) return;
-    if (signatureType === 'type' && !typedSignature.trim()) return;
-    if (signatureType === 'upload' && !uploadedSignature) return;
+    if (signatureType === "draw" && !hasSignature) return;
+    if (signatureType === "type" && !typedSignature.trim()) return;
+    if (signatureType === "upload" && !uploadedSignature) return;
 
     setSigning(true);
 
@@ -171,17 +186,17 @@ const SignWrapper: FC = () => {
 
       const pages = pdfDoc.getPages();
       const totalPages = pages.length;
-      
+
       // Validate selected page
       const pageIndex = Math.min(Math.max(selectedPage - 1, 0), totalPages - 1);
       const targetPage = pages[pageIndex];
       const { width, height } = targetPage.getSize();
 
-      if (signatureType === 'type') {
+      if (signatureType === "type") {
         // Handle typed signature
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const fontSizeNum = Number.parseInt(fontSize);
-        
+
         targetPage.drawText(typedSignature, {
           x: getPosition(width, height).x,
           y: getPosition(width, height).y,
@@ -195,7 +210,10 @@ const SignWrapper: FC = () => {
         if (!signatureImageBytes) return;
 
         let signatureImage;
-        if (signatureType === 'upload' && uploadedSignature?.type === 'image/png') {
+        if (
+          signatureType === "upload" &&
+          uploadedSignature?.type === "image/png"
+        ) {
           signatureImage = await pdfDoc.embedPng(signatureImageBytes);
         } else {
           signatureImage = await pdfDoc.embedPng(signatureImageBytes);
@@ -239,8 +257,8 @@ const SignWrapper: FC = () => {
     setFiles([]);
     setSigned(false);
     setSignedPdfUrl("");
-    setSignatureType('draw');
-    setSignaturePosition('bottom-right');
+    setSignatureType("draw");
+    setSignaturePosition("bottom-right");
     setCustomX("50");
     setCustomY("50");
     setSelectedPage(1);
@@ -251,11 +269,11 @@ const SignWrapper: FC = () => {
 
   const isSignatureReady = () => {
     switch (signatureType) {
-      case 'draw':
+      case "draw":
         return hasSignature;
-      case 'type':
+      case "type":
         return typedSignature.trim().length > 0;
-      case 'upload':
+      case "upload":
         return uploadedSignature !== null;
       default:
         return false;
@@ -278,7 +296,12 @@ const SignWrapper: FC = () => {
           {/* Signature Type Selection */}
           <Card>
             <CardContent className="p-4">
-              <Tabs value={signatureType} onValueChange={(value) => setSignatureType(value as SignatureType)}>
+              <Tabs
+                value={signatureType}
+                onValueChange={(value) =>
+                  setSignatureType(value as SignatureType)
+                }
+              >
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="draw">
                     <PenTool className="w-4 h-4 mr-2" />
@@ -299,7 +322,11 @@ const SignWrapper: FC = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label>Draw your signature</Label>
-                      <Button variant="outline" size="sm" onClick={clearSignature}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearSignature}
+                      >
                         <Trash2 className="w-4 h-4 mr-2" />
                         Clear
                       </Button>
@@ -350,8 +377,12 @@ const SignWrapper: FC = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="Helvetica">Helvetica</SelectItem>
-                          <SelectItem value="Helvetica-Bold">Helvetica Bold</SelectItem>
-                          <SelectItem value="Times-Roman">Times New Roman</SelectItem>
+                          <SelectItem value="Helvetica-Bold">
+                            Helvetica Bold
+                          </SelectItem>
+                          <SelectItem value="Times-Roman">
+                            Times New Roman
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -391,16 +422,23 @@ const SignWrapper: FC = () => {
                     type="number"
                     min="1"
                     value={selectedPage}
-                    onChange={(e) => setSelectedPage(Number.parseInt(e.target.value))}
+                    onChange={(e) =>
+                      setSelectedPage(Number.parseInt(e.target.value))
+                    }
                   />
                   <p className="text-sm text-muted-foreground">
-                    Which page to sign (1 to {files[0] ? '?' : '1'})
+                    Which page to sign (1 to {files[0] ? "?" : "1"})
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label>Signature Position</Label>
-                  <Select value={signaturePosition} onValueChange={(value) => setSignaturePosition(value as SignaturePosition)}>
+                  <Select
+                    value={signaturePosition}
+                    onValueChange={(value) =>
+                      setSignaturePosition(value as SignaturePosition)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -414,7 +452,7 @@ const SignWrapper: FC = () => {
                   </Select>
                 </div>
 
-                {signaturePosition === 'custom' && (
+                {signaturePosition === "custom" && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>X Position</Label>

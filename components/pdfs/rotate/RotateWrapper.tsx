@@ -18,10 +18,12 @@ const RotateWrapper: FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [rotatedPdf, setRotatedPdf] = useState<string | null>(null);
   const [rotationAngle, setRotationAngle] = useState<RotationAngle>(90);
-  const [activeTab, setActiveTab] = useState<"original" | "preview">("original");
+  const [activeTab, setActiveTab] = useState<"original" | "preview">(
+    "original",
+  );
   const [showPreview, setShowPreview] = useState(false);
   const [currentRotation, setCurrentRotation] = useState<RotationAngle>(90);
-  
+
   const originalIframeRef = useRef<HTMLIFrameElement>(null);
   const previewIframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -50,14 +52,14 @@ const RotateWrapper: FC = () => {
 
   const handlePreview = async () => {
     if (files.length === 0) return;
-    
+
     setIsProcessing(true);
     try {
       const previewUrl = await generatePreview();
       if (previewUrl) {
         setShowPreview(true);
         setActiveTab("preview");
-        
+
         // Update preview iframe
         if (previewIframeRef.current) {
           previewIframeRef.current.src = previewUrl;
@@ -72,7 +74,7 @@ const RotateWrapper: FC = () => {
 
   const handleAngleChange = async (angle: RotationAngle) => {
     setRotationAngle(angle);
-    
+
     // Regenerate preview if preview is already shown
     if (showPreview) {
       setIsProcessing(true);
@@ -149,7 +151,7 @@ const RotateWrapper: FC = () => {
         type: "application/pdf",
       });
       const url = URL.createObjectURL(blob);
-      
+
       setRotatedPdf(url);
       setCurrentRotation(angle);
       setRotationAngle(angle);
@@ -202,14 +204,19 @@ const RotateWrapper: FC = () => {
                     </div>
 
                     {showPreview && (
-                      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "original" | "preview")}>
+                      <Tabs
+                        value={activeTab}
+                        onValueChange={(value) =>
+                          setActiveTab(value as "original" | "preview")
+                        }
+                      >
                         <TabsList className="grid w-full grid-cols-2">
                           <TabsTrigger value="original">Original</TabsTrigger>
                           <TabsTrigger value="preview">
                             Preview ({rotationAngle}°)
                           </TabsTrigger>
                         </TabsList>
-                        
+
                         <TabsContent value="original" className="space-y-2">
                           <div className="border rounded-lg h-64 overflow-hidden">
                             <iframe
@@ -223,7 +230,7 @@ const RotateWrapper: FC = () => {
                             Original document
                           </p>
                         </TabsContent>
-                        
+
                         <TabsContent value="preview" className="space-y-2">
                           <div className="border rounded-lg h-64 overflow-hidden">
                             {isProcessing ? (
@@ -270,12 +277,18 @@ const RotateWrapper: FC = () => {
                     <RadioGroup
                       value={rotationAngle.toString()}
                       onValueChange={(value) =>
-                        handleAngleChange(Number.parseInt(value) as RotationAngle)
+                        handleAngleChange(
+                          Number.parseInt(value) as RotationAngle,
+                        )
                       }
                     >
                       <div className="grid grid-cols-3 gap-2">
                         <div className="flex flex-col items-center space-y-2 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer">
-                          <RadioGroupItem value="90" id="90" className="sr-only" />
+                          <RadioGroupItem
+                            value="90"
+                            id="90"
+                            className="sr-only"
+                          />
                           <Label
                             htmlFor="90"
                             className="font-normal cursor-pointer flex flex-col items-center text-center"
@@ -286,9 +299,13 @@ const RotateWrapper: FC = () => {
                             90° clockwise
                           </Label>
                         </div>
-                        
+
                         <div className="flex flex-col items-center space-y-2 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer">
-                          <RadioGroupItem value="180" id="180" className="sr-only" />
+                          <RadioGroupItem
+                            value="180"
+                            id="180"
+                            className="sr-only"
+                          />
                           <Label
                             htmlFor="180"
                             className="font-normal cursor-pointer flex flex-col items-center text-center"
@@ -300,9 +317,13 @@ const RotateWrapper: FC = () => {
                             180° (upside down)
                           </Label>
                         </div>
-                        
+
                         <div className="flex flex-col items-center space-y-2 p-3 border rounded-lg hover:bg-accent/50 cursor-pointer">
-                          <RadioGroupItem value="270" id="270" className="sr-only" />
+                          <RadioGroupItem
+                            value="270"
+                            id="270"
+                            className="sr-only"
+                          />
                           <Label
                             htmlFor="270"
                             className="font-normal cursor-pointer flex flex-col items-center text-center"
@@ -353,7 +374,8 @@ const RotateWrapper: FC = () => {
                   PDF Rotated Successfully!
                 </h3>
                 <p className="text-muted-foreground">
-                  Your PDF has been rotated {currentRotation}° and is ready to download.
+                  Your PDF has been rotated {currentRotation}° and is ready to
+                  download.
                 </p>
               </div>
 
@@ -374,7 +396,9 @@ const RotateWrapper: FC = () => {
 
               {/* Quick Rotation Options */}
               <div className="space-y-3">
-                <Label className="text-base font-semibold">Try Different Angle</Label>
+                <Label className="text-base font-semibold">
+                  Try Different Angle
+                </Label>
                 <div className="grid grid-cols-3 gap-2">
                   <Button
                     variant="outline"
@@ -416,18 +440,18 @@ const RotateWrapper: FC = () => {
                   <Download className="w-4 h-4 mr-2" />
                   Download Rotated PDF
                 </Button>
-                
+
                 <div className="grid grid-cols-2 gap-3">
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={handleTryDifferentAngle}
                     className="w-full"
                   >
                     <Undo2 className="w-4 h-4 mr-2" />
                     Edit Again
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={resetAll}
                     className="w-full"
                   >

@@ -1,28 +1,62 @@
 "use client";
 
 import { FC, useState, useRef } from "react";
-import { 
-  Edit, Download, Loader2, Plus, Trash2, Type, Image, Square, 
-  Circle, Minus, RotateCcw, ZoomIn, ZoomOut, Eye, EyeOff,
-  Move, Undo, Redo, Layers,
+import {
+  Edit,
+  Download,
+  Loader2,
+  Plus,
+  Trash2,
+  Type,
+  Image,
+  Square,
+  Circle,
+  Minus,
+  RotateCcw,
+  ZoomIn,
+  ZoomOut,
+  Eye,
+  EyeOff,
+  Move,
+  Undo,
+  Redo,
+  Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import ToolLayout from "@/components/tools/ToolLayout";
 
-type ElementType = 'text' | 'image' | 'rectangle' | 'circle' | 'line';
-type TextAlignment = 'left' | 'center' | 'right';
-type FontWeight = 'normal' | 'bold' | 'italic';
-type ToolMode = 'select' | 'move' | 'text' | 'image' | 'rectangle' | 'circle' | 'line';
+type ElementType = "text" | "image" | "rectangle" | "circle" | "line";
+type TextAlignment = "left" | "center" | "right";
+type FontWeight = "normal" | "bold" | "italic";
+type ToolMode =
+  | "select"
+  | "move"
+  | "text"
+  | "image"
+  | "rectangle"
+  | "circle"
+  | "line";
 
 interface BaseElement {
   id: string;
@@ -36,7 +70,7 @@ interface BaseElement {
 }
 
 interface TextElement extends BaseElement {
-  type: 'text';
+  type: "text";
   content: string;
   fontSize: number;
   font: string;
@@ -48,7 +82,7 @@ interface TextElement extends BaseElement {
 }
 
 interface ImageElement extends BaseElement {
-  type: 'image';
+  type: "image";
   file: File;
   width: number;
   height: number;
@@ -56,7 +90,7 @@ interface ImageElement extends BaseElement {
 }
 
 interface RectangleElement extends BaseElement {
-  type: 'rectangle';
+  type: "rectangle";
   width: number;
   height: number;
   color: string;
@@ -66,7 +100,7 @@ interface RectangleElement extends BaseElement {
 }
 
 interface CircleElement extends BaseElement {
-  type: 'circle';
+  type: "circle";
   radius: number;
   color: string;
   borderColor: string;
@@ -74,7 +108,7 @@ interface CircleElement extends BaseElement {
 }
 
 interface LineElement extends BaseElement {
-  type: 'line';
+  type: "line";
   endX: number;
   endY: number;
   color: string;
@@ -82,7 +116,12 @@ interface LineElement extends BaseElement {
   dashed: boolean;
 }
 
-type PdfElement = TextElement | ImageElement | RectangleElement | CircleElement | LineElement;
+type PdfElement =
+  | TextElement
+  | ImageElement
+  | RectangleElement
+  | CircleElement
+  | LineElement;
 
 interface EditorHistory {
   elements: PdfElement[];
@@ -94,13 +133,13 @@ const EditPdfWrapper: FC = () => {
   const [editing, setEditing] = useState(false);
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
   const [elements, setElements] = useState<PdfElement[]>([]);
-  const [activeTab, setActiveTab] = useState<ElementType>('text');
-  const [toolMode, setToolMode] = useState<ToolMode>('select');
+  const [activeTab, setActiveTab] = useState<ElementType>("text");
+  const [toolMode, setToolMode] = useState<ToolMode>("select");
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
   const [zoom, setZoom] = useState(100);
   const [history, setHistory] = useState<EditorHistory[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  
+
   // Text element state
   const [textContent, setTextContent] = useState("");
   const [textX, setTextX] = useState("100");
@@ -112,7 +151,7 @@ const EditPdfWrapper: FC = () => {
   const [textBackground, setTextBackground] = useState("transparent");
   const [textPadding, setTextPadding] = useState("0");
   const [textAlignment, setTextAlignment] = useState<TextAlignment>("left");
-  
+
   // Image element state
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageX, setImageX] = useState("100");
@@ -120,7 +159,7 @@ const EditPdfWrapper: FC = () => {
   const [imageWidth, setImageWidth] = useState("150");
   const [imageHeight, setImageHeight] = useState("150");
   const [maintainAspect, setMaintainAspect] = useState(true);
-  
+
   // Rectangle element state
   const [rectX, setRectX] = useState("100");
   const [rectY, setRectY] = useState("100");
@@ -130,7 +169,7 @@ const EditPdfWrapper: FC = () => {
   const [rectBorderColor, setRectBorderColor] = useState("#000000");
   const [rectBorderWidth, setRectBorderWidth] = useState("2");
   const [rectBorderRadius, setRectBorderRadius] = useState("0");
-  
+
   // Circle element state
   const [circleX, setCircleX] = useState("150");
   const [circleY, setCircleY] = useState("150");
@@ -138,7 +177,7 @@ const EditPdfWrapper: FC = () => {
   const [circleColor, setCircleColor] = useState("#ffffff");
   const [circleBorderColor, setCircleBorderColor] = useState("#000000");
   const [circleBorderWidth, setCircleBorderWidth] = useState("2");
-  
+
   // Line element state
   const [lineStartX, setLineStartX] = useState("100");
   const [lineStartY, setLineStartY] = useState("100");
@@ -154,7 +193,7 @@ const EditPdfWrapper: FC = () => {
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push({
       elements: JSON.parse(JSON.stringify(newElements)),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
@@ -176,10 +215,10 @@ const EditPdfWrapper: FC = () => {
 
   const addTextElement = () => {
     if (!textContent.trim()) return;
-    
+
     const newElement: TextElement = {
       id: Date.now().toString(),
-      type: 'text',
+      type: "text",
       content: textContent,
       x: Number.parseInt(textX),
       y: Number.parseInt(textY),
@@ -193,9 +232,9 @@ const EditPdfWrapper: FC = () => {
       rotation: 0,
       opacity: 1,
       visible: true,
-      layer: elements.length
+      layer: elements.length,
     };
-    
+
     const newElements = [...elements, newElement];
     setElements(newElements);
     saveToHistory(newElements);
@@ -205,10 +244,10 @@ const EditPdfWrapper: FC = () => {
 
   const addImageElement = () => {
     if (!imageFile) return;
-    
+
     const newElement: ImageElement = {
       id: Date.now().toString(),
-      type: 'image',
+      type: "image",
       file: imageFile,
       x: Number.parseInt(imageX),
       y: Number.parseInt(imageY),
@@ -218,9 +257,9 @@ const EditPdfWrapper: FC = () => {
       rotation: 0,
       opacity: 1,
       visible: true,
-      layer: elements.length
+      layer: elements.length,
     };
-    
+
     const newElements = [...elements, newElement];
     setElements(newElements);
     saveToHistory(newElements);
@@ -231,7 +270,7 @@ const EditPdfWrapper: FC = () => {
   const addRectangleElement = () => {
     const newElement: RectangleElement = {
       id: Date.now().toString(),
-      type: 'rectangle',
+      type: "rectangle",
       x: Number.parseInt(rectX),
       y: Number.parseInt(rectY),
       width: Number.parseInt(rectWidth),
@@ -243,9 +282,9 @@ const EditPdfWrapper: FC = () => {
       rotation: 0,
       opacity: 1,
       visible: true,
-      layer: elements.length
+      layer: elements.length,
     };
-    
+
     const newElements = [...elements, newElement];
     setElements(newElements);
     saveToHistory(newElements);
@@ -255,7 +294,7 @@ const EditPdfWrapper: FC = () => {
   const addCircleElement = () => {
     const newElement: CircleElement = {
       id: Date.now().toString(),
-      type: 'circle',
+      type: "circle",
       x: Number.parseInt(circleX),
       y: Number.parseInt(circleY),
       radius: Number.parseInt(circleRadius),
@@ -265,9 +304,9 @@ const EditPdfWrapper: FC = () => {
       rotation: 0,
       opacity: 1,
       visible: true,
-      layer: elements.length
+      layer: elements.length,
     };
-    
+
     const newElements = [...elements, newElement];
     setElements(newElements);
     saveToHistory(newElements);
@@ -277,7 +316,7 @@ const EditPdfWrapper: FC = () => {
   const addLineElement = () => {
     const newElement: LineElement = {
       id: Date.now().toString(),
-      type: 'line',
+      type: "line",
       x: Number.parseInt(lineStartX),
       y: Number.parseInt(lineStartY),
       endX: Number.parseInt(lineEndX),
@@ -288,9 +327,9 @@ const EditPdfWrapper: FC = () => {
       rotation: 0,
       opacity: 1,
       visible: true,
-      layer: elements.length
+      layer: elements.length,
     };
-    
+
     const newElements = [...elements, newElement];
     setElements(newElements);
     saveToHistory(newElements);
@@ -298,7 +337,7 @@ const EditPdfWrapper: FC = () => {
   };
 
   const removeElement = (id: string) => {
-    const newElements = elements.filter(element => element.id !== id);
+    const newElements = elements.filter((element) => element.id !== id);
     setElements(newElements);
     saveToHistory(newElements);
     if (selectedElement === id) {
@@ -307,19 +346,19 @@ const EditPdfWrapper: FC = () => {
   };
 
   const updateElement = (id: string, updates: Partial<PdfElement>) => {
-    const newElements = elements.map(element => {
+    const newElements = elements.map((element) => {
       if (element.id === id) {
         // Type-safe update for each element type
         switch (element.type) {
-          case 'text':
+          case "text":
             return { ...element, ...updates } as TextElement;
-          case 'image':
+          case "image":
             return { ...element, ...updates } as ImageElement;
-          case 'rectangle':
+          case "rectangle":
             return { ...element, ...updates } as RectangleElement;
-          case 'circle':
+          case "circle":
             return { ...element, ...updates } as CircleElement;
-          case 'line':
+          case "line":
             return { ...element, ...updates } as LineElement;
           default:
             return element;
@@ -331,37 +370,45 @@ const EditPdfWrapper: FC = () => {
     saveToHistory(newElements);
   };
 
-  const moveElement = (id: string, direction: 'up' | 'down') => {
-    const index = elements.findIndex(el => el.id === id);
+  const moveElement = (id: string, direction: "up" | "down") => {
+    const index = elements.findIndex((el) => el.id === id);
     if (index === -1) return;
 
     const newElements = [...elements];
-    if (direction === 'up' && index < newElements.length - 1) {
-      [newElements[index], newElements[index + 1]] = [newElements[index + 1], newElements[index]];
-    } else if (direction === 'down' && index > 0) {
-      [newElements[index], newElements[index - 1]] = [newElements[index - 1], newElements[index]];
+    if (direction === "up" && index < newElements.length - 1) {
+      [newElements[index], newElements[index + 1]] = [
+        newElements[index + 1],
+        newElements[index],
+      ];
+    } else if (direction === "down" && index > 0) {
+      [newElements[index], newElements[index - 1]] = [
+        newElements[index - 1],
+        newElements[index],
+      ];
     }
-    
+
     setElements(newElements);
     saveToHistory(newElements);
   };
 
   const toggleElementVisibility = (id: string) => {
-    const element = elements.find(el => el.id === id);
+    const element = elements.find((el) => el.id === id);
     if (element) {
       updateElement(id, { visible: !element.visible });
     }
   };
 
   const hexToRgb = (hex: string) => {
-    if (hex === 'transparent') return { r: 1, g: 1, b: 1, a: 0 };
-    
+    if (hex === "transparent") return { r: 1, g: 1, b: 1, a: 0 };
+
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: Number.parseInt(result[1], 16) / 255,
-      g: Number.parseInt(result[2], 16) / 255,
-      b: Number.parseInt(result[3], 16) / 255,
-    } : { r: 0, g: 0, b: 0 };
+    return result
+      ? {
+          r: Number.parseInt(result[1], 16) / 255,
+          g: Number.parseInt(result[2], 16) / 255,
+          b: Number.parseInt(result[3], 16) / 255,
+        }
+      : { r: 0, g: 0, b: 0 };
   };
 
   const handleEdit = async () => {
@@ -372,14 +419,18 @@ const EditPdfWrapper: FC = () => {
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();
       const pdfDoc = await PDFDocument.load(arrayBuffer);
-      
+
       const pages = pdfDoc.getPages();
       const firstPage = pages[0];
       const { width, height } = firstPage.getSize();
 
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-      const helveticaObliqueFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
+      const helveticaBoldFont = await pdfDoc.embedFont(
+        StandardFonts.HelveticaBold,
+      );
+      const helveticaObliqueFont = await pdfDoc.embedFont(
+        StandardFonts.HelveticaOblique,
+      );
 
       // Sort elements by layer for proper rendering order
       const sortedElements = [...elements].sort((a, b) => a.layer - b.layer);
@@ -387,26 +438,31 @@ const EditPdfWrapper: FC = () => {
       for (const element of sortedElements) {
         if (!element.visible) continue;
 
-        if (element.type === 'text') {
-          const font = element.fontWeight === 'bold' ? helveticaBoldFont :
-                      element.fontWeight === 'italic' ? helveticaObliqueFont :
-                      helveticaFont;
-          
+        if (element.type === "text") {
+          const font =
+            element.fontWeight === "bold"
+              ? helveticaBoldFont
+              : element.fontWeight === "italic"
+                ? helveticaObliqueFont
+                : helveticaFont;
+
           const color = hexToRgb(element.color);
-          
+
           // Draw background if specified
-          if (element.backgroundColor !== 'transparent') {
+          if (element.backgroundColor !== "transparent") {
             const bgColor = hexToRgb(element.backgroundColor);
             firstPage.drawRectangle({
               x: element.x - element.padding,
               y: height - element.y - element.fontSize - element.padding,
-              width: element.content.length * (element.fontSize * 0.6) + element.padding * 2,
+              width:
+                element.content.length * (element.fontSize * 0.6) +
+                element.padding * 2,
               height: element.fontSize + element.padding * 2,
               color: rgb(bgColor.r, bgColor.g, bgColor.b),
               opacity: element.opacity,
             });
           }
-          
+
           firstPage.drawText(element.content, {
             x: element.x,
             y: height - element.y,
@@ -415,17 +471,17 @@ const EditPdfWrapper: FC = () => {
             color: rgb(color.r, color.g, color.b),
             opacity: element.opacity,
           });
-        } else if (element.type === 'image') {
+        } else if (element.type === "image") {
           try {
             const imageBytes = await element.file.arrayBuffer();
             let image;
-            
-            if (element.file.type === 'image/png') {
+
+            if (element.file.type === "image/png") {
               image = await pdfDoc.embedPng(new Uint8Array(imageBytes));
             } else {
               image = await pdfDoc.embedJpg(new Uint8Array(imageBytes));
             }
-            
+
             firstPage.drawImage(image, {
               x: element.x,
               y: height - element.y - element.height,
@@ -434,12 +490,12 @@ const EditPdfWrapper: FC = () => {
               opacity: element.opacity,
             });
           } catch (error) {
-            console.warn('Failed to embed image:', error);
+            console.warn("Failed to embed image:", error);
           }
-        } else if (element.type === 'rectangle') {
+        } else if (element.type === "rectangle") {
           const fillColor = hexToRgb(element.color);
           const borderColor = hexToRgb(element.borderColor);
-          
+
           firstPage.drawRectangle({
             x: element.x,
             y: height - element.y - element.height,
@@ -450,10 +506,10 @@ const EditPdfWrapper: FC = () => {
             borderWidth: element.borderWidth,
             opacity: element.opacity,
           });
-        } else if (element.type === 'circle') {
+        } else if (element.type === "circle") {
           const fillColor = hexToRgb(element.color);
           const borderColor = hexToRgb(element.borderColor);
-          
+
           // Draw circle using rectangle with border radius (simplified)
           firstPage.drawRectangle({
             x: element.x - element.radius,
@@ -465,13 +521,19 @@ const EditPdfWrapper: FC = () => {
             borderWidth: element.borderWidth,
             opacity: element.opacity,
           });
-        } else if (element.type === 'line') {
+        } else if (element.type === "line") {
           const color = hexToRgb(element.color);
-          
+
           // Draw line using rectangle (simplified)
-          const angle = Math.atan2(element.endY - element.y, element.endX - element.x);
-          const length = Math.sqrt(Math.pow(element.endX - element.x, 2) + Math.pow(element.endY - element.y, 2));
-          
+          const angle = Math.atan2(
+            element.endY - element.y,
+            element.endX - element.x,
+          );
+          const length = Math.sqrt(
+            Math.pow(element.endX - element.x, 2) +
+              Math.pow(element.endY - element.y, 2),
+          );
+
           firstPage.drawRectangle({
             x: element.x,
             y: height - element.y - element.thickness / 2,
@@ -484,7 +546,9 @@ const EditPdfWrapper: FC = () => {
       }
 
       const pdfBytes = await pdfDoc.save();
-      const blob = new Blob([pdfBytes as unknown as BlobPart], { type: "application/pdf" });
+      const blob = new Blob([pdfBytes as unknown as BlobPart], {
+        type: "application/pdf",
+      });
       const url = URL.createObjectURL(blob);
       setProcessedUrl(url);
     } catch (error) {
@@ -507,7 +571,7 @@ const EditPdfWrapper: FC = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith('image/')) {
+    if (file && file.type.startsWith("image/")) {
       setImageFile(file);
     }
   };
@@ -524,7 +588,7 @@ const EditPdfWrapper: FC = () => {
     setZoom(100);
   };
 
-  const selectedElementData = elements.find(el => el.id === selectedElement);
+  const selectedElementData = elements.find((el) => el.id === selectedElement);
 
   return (
     <ToolLayout
@@ -548,9 +612,11 @@ const EditPdfWrapper: FC = () => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                          variant={toolMode === 'select' ? 'default' : 'outline'}
+                          variant={
+                            toolMode === "select" ? "default" : "outline"
+                          }
                           size="sm"
-                          onClick={() => setToolMode('select')}
+                          onClick={() => setToolMode("select")}
                         >
                           <Move className="w-4 h-4" />
                         </Button>
@@ -563,9 +629,9 @@ const EditPdfWrapper: FC = () => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                          variant={toolMode === 'text' ? 'default' : 'outline'}
+                          variant={toolMode === "text" ? "default" : "outline"}
                           size="sm"
-                          onClick={() => setToolMode('text')}
+                          onClick={() => setToolMode("text")}
                         >
                           <Type className="w-4 h-4" />
                         </Button>
@@ -614,7 +680,7 @@ const EditPdfWrapper: FC = () => {
 
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
-                    {elements.length} element{elements.length !== 1 ? 's' : ''}
+                    {elements.length} element{elements.length !== 1 ? "s" : ""}
                   </span>
                 </div>
               </div>
@@ -646,7 +712,9 @@ const EditPdfWrapper: FC = () => {
                       <div
                         key={element.id}
                         className={`flex items-center justify-between p-2 border rounded cursor-pointer ${
-                          selectedElement === element.id ? 'bg-accent border-primary' : ''
+                          selectedElement === element.id
+                            ? "bg-accent border-primary"
+                            : ""
                         }`}
                         onClick={() => setSelectedElement(element.id)}
                       >
@@ -666,14 +734,25 @@ const EditPdfWrapper: FC = () => {
                               <EyeOff className="w-3 h-3" />
                             )}
                           </Button>
-                          {element.type === 'text' && <Type className="w-4 h-4" />}
-                          {element.type === 'image' && <Image className="w-4 h-4" />}
-                          {element.type === 'rectangle' && <Square className="w-4 h-4" />}
-                          {element.type === 'circle' && <Circle className="w-4 h-4" />}
-                          {element.type === 'line' && <Minus className="w-4 h-4" />}
+                          {element.type === "text" && (
+                            <Type className="w-4 h-4" />
+                          )}
+                          {element.type === "image" && (
+                            <Image className="w-4 h-4" />
+                          )}
+                          {element.type === "rectangle" && (
+                            <Square className="w-4 h-4" />
+                          )}
+                          {element.type === "circle" && (
+                            <Circle className="w-4 h-4" />
+                          )}
+                          {element.type === "line" && (
+                            <Minus className="w-4 h-4" />
+                          )}
                           <span className="text-sm capitalize truncate flex-1">
-                            {element.type} 
-                            {element.type === 'text' && `: ${element.content.substring(0, 15)}${element.content.length > 15 ? '...' : ''}`}
+                            {element.type}
+                            {element.type === "text" &&
+                              `: ${element.content.substring(0, 15)}${element.content.length > 15 ? "..." : ""}`}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -682,7 +761,7 @@ const EditPdfWrapper: FC = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              moveElement(element.id, 'down');
+                              moveElement(element.id, "down");
                             }}
                             className="h-6 w-6 p-0"
                           >
@@ -693,7 +772,7 @@ const EditPdfWrapper: FC = () => {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              moveElement(element.id, 'up');
+                              moveElement(element.id, "up");
                             }}
                             className="h-6 w-6 p-0"
                           >
@@ -725,7 +804,12 @@ const EditPdfWrapper: FC = () => {
               {/* Add Elements Tabs */}
               <Card>
                 <CardContent className="p-4">
-                  <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ElementType)}>
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={(value) =>
+                      setActiveTab(value as ElementType)
+                    }
+                  >
                     <TabsList className="grid w-full grid-cols-3 mb-4">
                       <TabsTrigger value="text">Text</TabsTrigger>
                       <TabsTrigger value="image">Image</TabsTrigger>
@@ -778,7 +862,12 @@ const EditPdfWrapper: FC = () => {
                         </div>
                         <div className="space-y-2">
                           <Label>Font Weight</Label>
-                          <Select value={fontWeight} onValueChange={(value: FontWeight) => setFontWeight(value)}>
+                          <Select
+                            value={fontWeight}
+                            onValueChange={(value: FontWeight) =>
+                              setFontWeight(value)
+                            }
+                          >
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
@@ -800,7 +889,11 @@ const EditPdfWrapper: FC = () => {
                         />
                       </div>
 
-                      <Button onClick={addTextElement} disabled={!textContent.trim()} className="w-full">
+                      <Button
+                        onClick={addTextElement}
+                        disabled={!textContent.trim()}
+                        className="w-full"
+                      >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Text
                       </Button>
@@ -873,7 +966,11 @@ const EditPdfWrapper: FC = () => {
                         <Label>Maintain Aspect Ratio</Label>
                       </div>
 
-                      <Button onClick={addImageElement} disabled={!imageFile} className="w-full">
+                      <Button
+                        onClick={addImageElement}
+                        disabled={!imageFile}
+                        className="w-full"
+                      >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Image
                       </Button>
@@ -945,7 +1042,9 @@ const EditPdfWrapper: FC = () => {
                             <Input
                               type="color"
                               value={rectBorderColor}
-                              onChange={(e) => setRectBorderColor(e.target.value)}
+                              onChange={(e) =>
+                                setRectBorderColor(e.target.value)
+                              }
                             />
                           </div>
                         </div>
@@ -956,7 +1055,9 @@ const EditPdfWrapper: FC = () => {
                             <Input
                               type="number"
                               value={rectBorderWidth}
-                              onChange={(e) => setRectBorderWidth(e.target.value)}
+                              onChange={(e) =>
+                                setRectBorderWidth(e.target.value)
+                              }
                               min="0"
                               max="10"
                             />
@@ -966,14 +1067,19 @@ const EditPdfWrapper: FC = () => {
                             <Input
                               type="number"
                               value={rectBorderRadius}
-                              onChange={(e) => setRectBorderRadius(e.target.value)}
+                              onChange={(e) =>
+                                setRectBorderRadius(e.target.value)
+                              }
                               min="0"
                               max="50"
                             />
                           </div>
                         </div>
 
-                        <Button onClick={addRectangleElement} className="w-full">
+                        <Button
+                          onClick={addRectangleElement}
+                          className="w-full"
+                        >
                           <Plus className="w-4 h-4 mr-2" />
                           Add Rectangle
                         </Button>
@@ -1026,7 +1132,9 @@ const EditPdfWrapper: FC = () => {
                             <Input
                               type="color"
                               value={circleBorderColor}
-                              onChange={(e) => setCircleBorderColor(e.target.value)}
+                              onChange={(e) =>
+                                setCircleBorderColor(e.target.value)
+                              }
                             />
                           </div>
                         </div>
@@ -1036,7 +1144,9 @@ const EditPdfWrapper: FC = () => {
                           <Input
                             type="number"
                             value={circleBorderWidth}
-                            onChange={(e) => setCircleBorderWidth(e.target.value)}
+                            onChange={(e) =>
+                              setCircleBorderWidth(e.target.value)
+                            }
                             min="0"
                             max="10"
                           />
@@ -1152,13 +1262,14 @@ const EditPdfWrapper: FC = () => {
                       </Button>
                     </div>
                   </div>
-                  
+
                   <div className="border-2 border-dashed border-muted-foreground/20 rounded-lg h-96 flex items-center justify-center bg-muted/30">
                     <div className="text-center">
                       <Image className="w-12 h-12 mx-auto mb-2 text-muted-foreground" />
                       <p className="text-muted-foreground">PDF Preview</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {elements.length} element{elements.length !== 1 ? 's' : ''} added
+                        {elements.length} element
+                        {elements.length !== 1 ? "s" : ""} added
                       </p>
                     </div>
                   </div>
@@ -1189,7 +1300,11 @@ const EditPdfWrapper: FC = () => {
                           <Input
                             type="number"
                             value={selectedElementData.x}
-                            onChange={(e) => updateElement(selectedElementData.id, { x: Number.parseInt(e.target.value) })}
+                            onChange={(e) =>
+                              updateElement(selectedElementData.id, {
+                                x: Number.parseInt(e.target.value),
+                              })
+                            }
                           />
                         </div>
                         <div className="space-y-2">
@@ -1197,7 +1312,11 @@ const EditPdfWrapper: FC = () => {
                           <Input
                             type="number"
                             value={selectedElementData.y}
-                            onChange={(e) => updateElement(selectedElementData.id, { y: Number.parseInt(e.target.value) })}
+                            onChange={(e) =>
+                              updateElement(selectedElementData.id, {
+                                y: Number.parseInt(e.target.value),
+                              })
+                            }
                           />
                         </div>
                       </div>
@@ -1206,13 +1325,19 @@ const EditPdfWrapper: FC = () => {
                         <Label>Opacity</Label>
                         <Slider
                           value={[selectedElementData.opacity * 100]}
-                          onValueChange={([value]) => updateElement(selectedElementData.id, { opacity: value / 100 })}
+                          onValueChange={([value]) =>
+                            updateElement(selectedElementData.id, {
+                              opacity: value / 100,
+                            })
+                          }
                           max={100}
                           step={1}
                         />
                         <div className="flex justify-between text-sm text-muted-foreground">
                           <span>0%</span>
-                          <span>{Math.round(selectedElementData.opacity * 100)}%</span>
+                          <span>
+                            {Math.round(selectedElementData.opacity * 100)}%
+                          </span>
                           <span>100%</span>
                         </div>
                       </div>
@@ -1220,18 +1345,24 @@ const EditPdfWrapper: FC = () => {
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={selectedElementData.visible}
-                          onCheckedChange={(visible) => updateElement(selectedElementData.id, { visible })}
+                          onCheckedChange={(visible) =>
+                            updateElement(selectedElementData.id, { visible })
+                          }
                         />
                         <Label>Visible</Label>
                       </div>
 
-                      {selectedElementData.type === 'text' && (
+                      {selectedElementData.type === "text" && (
                         <>
                           <div className="space-y-2">
                             <Label>Text Content</Label>
                             <Textarea
                               value={selectedElementData.content}
-                              onChange={(e) => updateElement(selectedElementData.id, { content: e.target.value })}
+                              onChange={(e) =>
+                                updateElement(selectedElementData.id, {
+                                  content: e.target.value,
+                                })
+                              }
                             />
                           </div>
                           <div className="space-y-2">
@@ -1239,7 +1370,11 @@ const EditPdfWrapper: FC = () => {
                             <Input
                               type="color"
                               value={selectedElementData.color}
-                              onChange={(e) => updateElement(selectedElementData.id, { color: e.target.value })}
+                              onChange={(e) =>
+                                updateElement(selectedElementData.id, {
+                                  color: e.target.value,
+                                })
+                              }
                             />
                           </div>
                         </>
@@ -1264,7 +1399,7 @@ const EditPdfWrapper: FC = () => {
                 Applying Changes...
               </>
             ) : (
-              `Apply ${elements.length} Element${elements.length !== 1 ? 's' : ''} to PDF`
+              `Apply ${elements.length} Element${elements.length !== 1 ? "s" : ""} to PDF`
             )}
           </Button>
         </div>
@@ -1279,7 +1414,8 @@ const EditPdfWrapper: FC = () => {
             PDF Edited Successfully!
           </h3>
           <p className="text-muted-foreground mb-6">
-            Your edited PDF with {elements.length} element{elements.length !== 1 ? 's' : ''} is ready to download.
+            Your edited PDF with {elements.length} element
+            {elements.length !== 1 ? "s" : ""} is ready to download.
           </p>
           <div className="flex gap-3 justify-center">
             <Button onClick={handleDownload} size="lg">

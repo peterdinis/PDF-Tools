@@ -37,7 +37,9 @@ const WatermarkWrapper: FC = () => {
         const pages = pdfDoc.getPages();
         setTotalPages(pages.length);
         // Reset selected pages to all pages when new file is selected
-        setSelectedPages(Array.from({ length: pages.length }, (_, i) => i + 1).join(','));
+        setSelectedPages(
+          Array.from({ length: pages.length }, (_, i) => i + 1).join(","),
+        );
       } catch (error) {
         console.error("Error loading PDF:", error);
       }
@@ -46,13 +48,15 @@ const WatermarkWrapper: FC = () => {
 
   const parsePageSelection = (selection: string): number[] => {
     const pages: number[] = [];
-    const parts = selection.split(',');
+    const parts = selection.split(",");
 
     for (const part of parts) {
       const trimmed = part.trim();
-      if (trimmed.includes('-')) {
+      if (trimmed.includes("-")) {
         // Handle ranges like "1-5"
-        const [start, end] = trimmed.split('-').map(num => Number.parseInt(num.trim()));
+        const [start, end] = trimmed
+          .split("-")
+          .map((num) => Number.parseInt(num.trim()));
         if (!isNaN(start) && !isNaN(end)) {
           for (let i = start; i <= end; i++) {
             if (i >= 1 && i <= totalPages) {
@@ -145,7 +149,7 @@ const WatermarkWrapper: FC = () => {
                   font,
                   color: rgb(0.5, 0.5, 0.5),
                   opacity: opacityValue,
-                  rotate: angleInRadians as unknown as Rotation
+                  rotate: angleInRadians as unknown as Rotation,
                 });
               }
               continue; // Skip the regular drawing for diagonal
@@ -283,7 +287,8 @@ const WatermarkWrapper: FC = () => {
                   onChange={(e) => setSelectedPages(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Enter page numbers: single (1), range (1-5), or combination (1,3-5,8)
+                  Enter page numbers: single (1), range (1-5), or combination
+                  (1,3-5,8)
                 </p>
                 <div className="text-xs text-muted-foreground space-y-1">
                   <div>Examples:</div>
@@ -298,7 +303,11 @@ const WatermarkWrapper: FC = () => {
 
           <Button
             onClick={handleProcess}
-            disabled={processing || !watermarkText || (!applyToAll && !selectedPages.trim())}
+            disabled={
+              processing ||
+              !watermarkText ||
+              (!applyToAll && !selectedPages.trim())
+            }
             className="w-full bg-primary hover:bg-primary/90"
             size="lg"
           >
@@ -330,11 +339,7 @@ const WatermarkWrapper: FC = () => {
               <Download className="w-4 h-4 mr-2" />
               Download Watermarked PDF
             </Button>
-            <Button
-              variant="outline"
-              onClick={resetAll}
-              size="lg"
-            >
+            <Button variant="outline" onClick={resetAll} size="lg">
               Add Another Watermark
             </Button>
           </div>
