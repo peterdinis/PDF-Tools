@@ -91,6 +91,7 @@ const WatermarkWrapper: FC = () => {
       onFilesChange={setFiles}
       acceptedFileTypes=".pdf"
       maxFiles={1}
+      showUpload={true}
     >
       {files.length > 0 && !processedUrl && (
         <div className="space-y-4">
