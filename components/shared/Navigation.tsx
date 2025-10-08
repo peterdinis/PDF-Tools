@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FileText, Menu, X } from "lucide-react";
 import { FC, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ModeToggle } from "./ModeToggle";
 
 const Navigation: FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -46,6 +47,7 @@ const Navigation: FC = () => {
             >
               Convert PDF
             </Link>
+            <ModeToggle />
           </nav>
 
           {/* Mobile hamburger */}
@@ -96,6 +98,7 @@ const Navigation: FC = () => {
             >
               Convert PDF
             </Link>
+            <ModeToggle />
           </motion.nav>
         )}
       </AnimatePresence>
