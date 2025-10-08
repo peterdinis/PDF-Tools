@@ -2,7 +2,7 @@
 
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Layers, ArrowUp, ArrowDown } from "lucide-react";
+import { Download, Layers, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
 import { PDFDocument } from "pdf-lib";
 import ToolLayout from "@/components/tools/ToolLayout";
 
@@ -23,6 +23,11 @@ const MergerPDFWrapper: FC = () => {
       newFiles[swapIndex],
       newFiles[index],
     ];
+    setFiles(newFiles);
+  };
+
+  const removeFile = (index: number) => {
+    const newFiles = files.filter((_, i) => i !== index);
     setFiles(newFiles);
   };
 
@@ -70,6 +75,10 @@ const MergerPDFWrapper: FC = () => {
     setMergedPdfUrl(null);
   };
 
+  const clearAllFiles = () => {
+    setFiles([]);
+  };
+
   return (
     <ToolLayout
       title="Merge PDF"
@@ -89,10 +98,23 @@ const MergerPDFWrapper: FC = () => {
 
       {files.length > 0 && !mergedPdfUrl && (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            {files.length} file{files.length > 1 ? "s" : ""} selected. Adjust
-            their order before merging.
-          </p>
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground">
+              {files.length} file{files.length > 1 ? "s" : ""} selected. Adjust
+              their order before merging.
+            </p>
+            {files.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearAllFiles}
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear All
+              </Button>
+            )}
+          </div>
 
           <ul className="space-y-2">
             {files.map((file, index) => (
@@ -100,7 +122,7 @@ const MergerPDFWrapper: FC = () => {
                 key={file.name}
                 className="flex items-center justify-between border p-2 rounded"
               >
-                <span className="truncate">{file.name}</span>
+                <span className="truncate flex-1">{file.name}</span>
                 <div className="flex gap-2">
                   <Button
                     size="icon"
@@ -117,6 +139,14 @@ const MergerPDFWrapper: FC = () => {
                     disabled={index === files.length - 1}
                   >
                     <ArrowDown className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => removeFile(index)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </li>
