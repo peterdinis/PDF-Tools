@@ -1,12 +1,17 @@
 "use server";
 
-import qpdf from "node-qpdf";
+import { encrypt } from "node-qpdf2";
 import fs from "fs";
+import path from "path";
+import { randomBytes } from "crypto";
 
 export async function protectPDF(
   fileData: ArrayBuffer,
   password: string,
 ): Promise<{ success: boolean; data?: ArrayBuffer; error?: string }> {
+  let inputPath: string | null = null;
+  let outputPath: string | null = null;
+
   try {
     if (!fileData || fileData.byteLength === 0) {
       return { success: false, error: "No file data provided" };
@@ -16,20 +21,23 @@ export async function protectPDF(
       return { success: false, error: "Password must be at least 4 characters" };
     }
 
-    // Ulož input PDF do temporary súboru
-    const inputPath = "/tmp/input.pdf";
-    const outputPath = "/tmp/output.pdf";
+    const uniqueId = randomBytes(8).toString("hex");
+    inputPath = path.join("/tmp", `input-${uniqueId}.pdf`);
+    outputPath = path.join("/tmp", `output-${uniqueId}.pdf`);
+
     fs.writeFileSync(inputPath, Buffer.from(fileData));
 
-    // Nastavenie hesla pomocou qpdf
-    qpdf.encrypt(inputPath, outputPath, {
-      password: password,         // user password
-      keyLength: 128,             // alebo 256 pre silnejšie šifrovanie
+    // Correct node-qpdf2 syntax - single options object
+    await encrypt({
+      input: inputPath,
+      output: outputPath,
+      password: password,
+      keyLength: 128,
       restrictions: {
-        print: "low",             // "none" | "low" | "high"
-        modify: false,
-        extract: false,
-        annotate: false,
+        print: "low",
+        modify: "none",
+        extract: "n",
+        useAes: "y",
       },
     });
 
@@ -42,5 +50,16 @@ export async function protectPDF(
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
     };
+  } finally {
+    try {
+      if (inputPath && fs.existsSync(inputPath)) {
+        fs.unlinkSync(inputPath);
+      }
+      if (outputPath && fs.existsSync(outputPath)) {
+        fs.unlinkSync(outputPath);
+      }
+    } catch (cleanupError) {
+      console.error("Error cleaning up temp files:", cleanupError);
+    }
   }
 }

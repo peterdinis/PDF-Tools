@@ -56,6 +56,9 @@ importers:
       node-qpdf:
         specifier: ^1.0.3
         version: 1.0.3
+      node-qpdf2:
+        specifier: ^6.0.0
+        version: 6.0.0
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
@@ -1121,6 +1124,10 @@ packages:
       sass:
         optional: true
 
+  node-qpdf2@6.0.0:
+    resolution: {integrity: sha512-ys8KADQ7xx7K6cgtjDjfvsjRQA0gUWxiynTvvzSxTpRnUpA0KADPx/HRt67dJGIj69t76rz4aQl8OEd67yTX/g==}
+    engines: {node: '>=16'}
+
   node-qpdf@1.0.3:
     resolution: {integrity: sha512-M1Y5+7Ycm93Uwd7MhLUVTzRUTgHGiPiqjdYqNYoma9WGuiVvzwQ8EeyBKKwVbu3fK83lDxUBf+GX8G0S9Nx8ew==}
 
@@ -2154,6 +2161,8 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
       - babel-plugin-macros
+
+  node-qpdf2@6.0.0: {}
 
   node-qpdf@1.0.3: {}
 
