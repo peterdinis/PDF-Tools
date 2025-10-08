@@ -165,14 +165,6 @@ const tools = [
     color: "text-green-500",
   },
   {
-    name: "Repair PDF",
-    description:
-      "Repair a damaged PDF and recover data from corrupt PDF. Fix PDF files with our Repair PDF tool.",
-    icon: FileCheck,
-    href: "/repair",
-    color: "text-orange-500",
-  },
-  {
     name: "Scan to PDF",
     description:
       "Capture document scans from any mobile device and automatically convert them to PDF files.",
