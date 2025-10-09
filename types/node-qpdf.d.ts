@@ -7,7 +7,7 @@ declare module "node-qpdf" {
   }
 
   interface EncryptOptions {
-    password?: string;   // user password
+    password?: string; // user password
     keyLength?: 40 | 128 | 256;
     restrictions?: Restrictions;
   }
@@ -15,6 +15,6 @@ declare module "node-qpdf" {
   export function encrypt(
     inputPath: string,
     outputPath: string,
-    options: EncryptOptions
+    options: EncryptOptions,
   ): void;
 }

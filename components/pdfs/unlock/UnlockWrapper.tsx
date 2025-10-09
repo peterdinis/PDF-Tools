@@ -143,7 +143,7 @@ const UnlockWrapper: FC = () => {
                           This PDF requires a password to unlock
                         </p>
                       </div>
-                      
+
                       <div className="flex gap-2">
                         <Button
                           onClick={() => handleProcess(true)}
@@ -178,9 +178,9 @@ const UnlockWrapper: FC = () => {
                       <Alert className="bg-blue-50 border-blue-200">
                         <AlertCircle className="h-4 w-4 text-blue-600" />
                         <AlertDescription className="text-blue-800">
-                          <strong>Note:</strong> This tool can remove password protection 
-                          and restrictions from PDF files. If your PDF is encrypted, 
-                          you'll need to provide the password.
+                          <strong>Note:</strong> This tool can remove password
+                          protection and restrictions from PDF files. If your
+                          PDF is encrypted, you'll need to provide the password.
                         </AlertDescription>
                       </Alert>
 

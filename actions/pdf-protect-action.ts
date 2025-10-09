@@ -18,7 +18,10 @@ export async function protectPDF(
     }
 
     if (!password || password.length < 4) {
-      return { success: false, error: "Password must be at least 4 characters" };
+      return {
+        success: false,
+        error: "Password must be at least 4 characters",
+      };
     }
 
     const uniqueId = randomBytes(8).toString("hex");

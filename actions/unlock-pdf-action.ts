@@ -7,7 +7,7 @@ import { randomBytes } from "crypto";
 
 export async function unlockPDF(
   fileData: ArrayBuffer,
-  password?: string
+  password?: string,
 ): Promise<{
   success: boolean;
   data?: ArrayBuffer;
@@ -77,14 +77,17 @@ export async function unlockPDF(
     // Read unlocked PDF
     const unlockedBuffer = fs.readFileSync(outputPath);
     if (unlockedBuffer.length === 0) {
-      return { success: false, error: "Failed to process PDF. Output file is empty." };
+      return {
+        success: false,
+        error: "Failed to process PDF. Output file is empty.",
+      };
     }
 
     return {
       success: true,
       data: unlockedBuffer.buffer.slice(
         unlockedBuffer.byteOffset,
-        unlockedBuffer.byteOffset + unlockedBuffer.byteLength
+        unlockedBuffer.byteOffset + unlockedBuffer.byteLength,
       ),
     };
   } catch (error) {
