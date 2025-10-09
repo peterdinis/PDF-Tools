@@ -1,8 +1,10 @@
-import ExtractWrapper from "@/components/pdfs/extract/ExtractWrapper";
-import { NextPage } from "next";
+import dynamic from "next/dynamic";
 
-const ExcratPdfPage: NextPage = () => {
+const ExtractWrapper = dynamic(
+  () => import("../../components/pdfs/extract/ExtractWrapper"),
+  { ssr: false } 
+);
+
+export default function Page() {
   return <ExtractWrapper />;
-};
-
-export default ExcratPdfPage;
+}
