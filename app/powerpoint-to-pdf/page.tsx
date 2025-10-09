@@ -1,8 +1,12 @@
-import PDFToPowerpointWrapper from "@/components/pdfs/pdf-to-powerpoint/PDFToPowerpointWrapper";
-import { NextPage } from "next";
+"use client"
 
-const PowerPointToPdfPage: NextPage = () => {
-  return <PDFToPowerpointWrapper />;
-};
+import dynamic from "next/dynamic";
 
-export default PowerPointToPdfPage;
+const PowerPointToPdfWrapper = dynamic(
+  () => import("@/components/pdfs/powerpoint-to-pdf/PowerpointToPdfWrapper"),
+  { ssr: false }
+);
+
+export default function PowerpointToPdfPage() {
+  return <PowerPointToPdfWrapper />;
+}

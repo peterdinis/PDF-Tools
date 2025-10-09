@@ -1,8 +1,12 @@
-import WordToPdfWrapper from "@/components/pdfs/word-to-pdf/WordToPdfWrapper";
-import { NextPage } from "next";
+"use client"
 
-const WordToPdfPage: NextPage = () => {
+import dynamic from "next/dynamic";
+
+const WordToPdfWrapper = dynamic(
+  () => import("@/components/pdfs/pdf-to-jpg/PdfToJpgWrapper"),
+  { ssr: false }
+);
+
+export default function WordToPdfPage() {
   return <WordToPdfWrapper />;
-};
-
-export default WordToPdfPage;
+}

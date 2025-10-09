@@ -1,8 +1,12 @@
-import ProtectWrapper from "@/components/pdfs/protect/ProtectWrapper";
-import { NextPage } from "next";
+"use client"
 
-const ProtectPdfPage: NextPage = () => {
+import dynamic from "next/dynamic";
+
+const ProtectWrapper = dynamic(
+  () => import("@/components/pdfs/protect/ProtectWrapper"),
+  { ssr: false }
+);
+
+export default function ProtectPdfPage() {
   return <ProtectWrapper />;
-};
-
-export default ProtectPdfPage;
+}

@@ -1,8 +1,12 @@
-import PdfToJpgWrapper from "@/components/pdfs/pdf-to-jpg/PdfToJpgWrapper";
-import { NextPage } from "next";
+"use client"
 
-const PdfToJpgPage: NextPage = () => {
-  return <PdfToJpgWrapper />;
-};
+import dynamic from "next/dynamic";
 
-export default PdfToJpgPage;
+const PdfToJgWrapper = dynamic(
+  () => import("@/components/pdfs/pdf-to-jpg/PdfToJpgWrapper"),
+  { ssr: false }
+);
+
+export default function ExcelToPdfPage() {
+  return <PdfToJgWrapper />;
+}

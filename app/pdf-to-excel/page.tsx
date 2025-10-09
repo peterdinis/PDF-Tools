@@ -1,8 +1,12 @@
-import ExcelWrapper from "@/components/pdfs/pdf-to-excel/ExcelWrapper";
-import { NextPage } from "next";
+"use client"
 
-const PDFToExcelPage: NextPage = () => {
+import dynamic from "next/dynamic";
+
+const ExcelWrapper = dynamic(
+  () => import("@/components/pdfs/pdf-to-excel/ExcelWrapper"),
+  { ssr: false }
+);
+
+export default function PdfToExcelPage() {
   return <ExcelWrapper />;
-};
-
-export default PDFToExcelPage;
+}
