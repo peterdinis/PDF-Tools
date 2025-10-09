@@ -1,8 +1,12 @@
-import MergerPDFWrapper from "@/components/pdfs/merge/MergePDFWrapper";
-import { NextPage } from "next";
+"use client"
 
-const MergePDFPage: NextPage = () => {
-  return <MergerPDFWrapper />;
-};
+import dynamic from "next/dynamic";
 
-export default MergePDFPage;
+const MergeWrapper = dynamic(
+  () => import("@/components/pdfs/merge/MergePDFWrapper"),
+  { ssr: false }
+);
+
+export default function MergePdfPage() {
+  return <MergeWrapper />;
+}

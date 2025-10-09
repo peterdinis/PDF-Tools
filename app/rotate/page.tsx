@@ -1,8 +1,12 @@
-import RotateWrapper from "@/components/pdfs/rotate/RotateWrapper";
-import { NextPage } from "next";
+"use client"
 
-const RotatePdfPage: NextPage = () => {
+import dynamic from "next/dynamic";
+
+const RotateWrapper = dynamic(
+  () => import("@/components/pdfs/rotate/RotateWrapper"),
+  { ssr: false }
+);
+
+export default function RotatePdfPage() {
   return <RotateWrapper />;
-};
-
-export default RotatePdfPage;
+}

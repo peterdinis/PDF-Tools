@@ -1,8 +1,12 @@
-import SplitPDFWrapper from "@/components/pdfs/split/SplitPDFWrapper";
-import { NextPage } from "next";
+"use client"
 
-const SplitPDFPage: NextPage = () => {
-  return <SplitPDFWrapper />;
-};
+import dynamic from "next/dynamic";
 
-export default SplitPDFPage;
+const SplitWrapper = dynamic(
+  () => import("@/components/pdfs/split/SplitPDFWrapper"),
+  { ssr: false }
+);
+
+export default function SplitPdfPage() {
+  return <SplitWrapper />;
+}

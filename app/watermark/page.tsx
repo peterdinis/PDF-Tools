@@ -1,8 +1,12 @@
-import WatermarkWrapper from "@/components/pdfs/watermark/WatermarkWrapper";
-import { NextPage } from "next";
+"use client"
 
-const WatermarkPdfPage: NextPage = () => {
-  return <WatermarkWrapper />;
-};
+import dynamic from "next/dynamic";
 
-export default WatermarkPdfPage;
+const WatermakWrapper = dynamic(
+  () => import("@/components/pdfs/watermark/WatermarkWrapper"),
+  { ssr: false }
+);
+
+export default function WatermarkPdfPage() {
+  return <WatermakWrapper />;
+}

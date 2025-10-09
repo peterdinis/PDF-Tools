@@ -1,8 +1,12 @@
-import CompressPDFWrapper from "@/components/pdfs/compress/CompressPDFWrapper";
-import { NextPage } from "next";
+"use client"
 
-const CompressPDFPage: NextPage = () => {
-  return <CompressPDFWrapper />;
-};
+import dynamic from "next/dynamic";
 
-export default CompressPDFPage;
+const CompressWrapper = dynamic(
+  () => import("@/components/pdfs/compress/CompressPDFWrapper"),
+  { ssr: false }
+);
+
+export default function CompressPdfPage() {
+  return <CompressWrapper />;
+}

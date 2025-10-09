@@ -1,8 +1,12 @@
-import ScanWrapper from "@/components/pdfs/scan/ScanWrapper";
-import { NextPage } from "next";
+"use client"
 
-const ScanPdfPage: NextPage = () => {
+import dynamic from "next/dynamic";
+
+const ScanWrapper = dynamic(
+  () => import("@/components/pdfs/scan/ScanWrapper"),
+  { ssr: false }
+);
+
+export default function ScanPdfPage() {
   return <ScanWrapper />;
-};
-
-export default ScanPdfPage;
+}

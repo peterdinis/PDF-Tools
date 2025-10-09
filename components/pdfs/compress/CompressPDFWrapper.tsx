@@ -4,7 +4,7 @@ import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Minimize2, X, AlertCircle } from "lucide-react";
-import { PDFDocument, PDFImage } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import ToolLayout from "@/components/tools/ToolLayout";

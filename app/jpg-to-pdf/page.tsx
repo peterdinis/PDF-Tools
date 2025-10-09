@@ -1,8 +1,12 @@
-import JpgToPdfWrapper from "@/components/pdfs/jpg-to-pdf/JpgToPdfWrapper";
-import { NextPage } from "next";
+"use client"
 
-const JpgToPdfPage: NextPage = () => {
+import dynamic from "next/dynamic";
+
+const JpgToPdfWrapper = dynamic(
+  () => import("@/components/pdfs/jpg-to-pdf/JpgToPdfWrapper"),
+  { ssr: false }
+);
+
+export default function JpgToPdfPage() {
   return <JpgToPdfWrapper />;
-};
-
-export default JpgToPdfPage;
+}

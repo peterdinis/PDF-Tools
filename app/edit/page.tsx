@@ -1,8 +1,12 @@
-import EditPdfWrapper from "@/components/pdfs/edit-pdf/EditPdfWrapper";
-import { NextPage } from "next";
+"use client"
 
-const EditPdfPage: NextPage = () => {
-  return <EditPdfWrapper />;
-};
+import dynamic from "next/dynamic";
 
-export default EditPdfPage;
+const EditWrapper = dynamic(
+  () => import("@/components/pdfs/edit-pdf/EditPdfWrapper"),
+  { ssr: false }
+);
+
+export default function EditPdfPage() {
+  return <EditWrapper />;
+}
