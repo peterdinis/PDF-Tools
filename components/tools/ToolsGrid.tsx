@@ -141,14 +141,6 @@ const tools = [
     color: "text-orange-500",
   },
   {
-    name: "Unlock PDF",
-    description:
-      "Remove PDF password security, giving you the freedom to use your PDFs as you want.",
-    icon: Unlock,
-    href: "/unlock",
-    color: "text-blue-500",
-  },
-  {
     name: "Protect PDF",
     description:
       "Protect PDF files with a password. Encrypt PDF documents to prevent unauthorized access.",
