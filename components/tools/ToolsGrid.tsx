@@ -180,14 +180,6 @@ const tools = [
     href: "/crop",
     color: "text-pink-500",
   },
-  {
-    name: "Extract PDF",
-    description:
-      "Extract images, text and pages from PDF files. Get all the data you need from your PDF.",
-    icon: FileDown,
-    href: "/extract",
-    color: "text-indigo-500",
-  },
 ];
 
 export function ToolsGrid() {
