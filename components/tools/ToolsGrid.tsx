@@ -141,14 +141,6 @@ const tools = [
     color: "text-orange-500",
   },
   {
-    name: "Unlock PDF",
-    description:
-      "Remove PDF password security, giving you the freedom to use your PDFs as you want.",
-    icon: Unlock,
-    href: "/unlock",
-    color: "text-blue-500",
-  },
-  {
     name: "Protect PDF",
     description:
       "Protect PDF files with a password. Encrypt PDF documents to prevent unauthorized access.",
@@ -163,14 +155,6 @@ const tools = [
     icon: Grid3x3,
     href: "/organize",
     color: "text-green-500",
-  },
-  {
-    name: "Repair PDF",
-    description:
-      "Repair a damaged PDF and recover data from corrupt PDF. Fix PDF files with our Repair PDF tool.",
-    icon: FileCheck,
-    href: "/repair",
-    color: "text-orange-500",
   },
   {
     name: "Scan to PDF",
@@ -195,14 +179,6 @@ const tools = [
     icon: Crop,
     href: "/crop",
     color: "text-pink-500",
-  },
-  {
-    name: "Reduce PDF",
-    description:
-      "Reduce file size and optimize PDF documents to decrease file size.",
-    icon: Minimize2,
-    href: "/reduce",
-    color: "text-green-500",
   },
   {
     name: "Extract PDF",
