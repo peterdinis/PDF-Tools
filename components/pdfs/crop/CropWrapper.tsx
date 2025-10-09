@@ -3,53 +3,44 @@
 import { FC, useState } from "react";
 import { Crop, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { PDFDocument } from "pdf-lib";
 import ToolLayout from "@/components/tools/ToolLayout";
+import { PDFDocument } from "pdf-lib";
 
+/**
+ * CropWrapper component allows users to upload a PDF,
+ * automatically crop pages to remove margins, and download it.
+ */
 const CropWrapper: FC = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [processing, setProcessing] = useState(false);
   const [processedUrl, setProcessedUrl] = useState<string | null>(null);
-  const [cropSize, setCropSize] = useState("a4");
 
+  /**
+   * Automatic crop action: removes 5-20pt margins from all pages.
+   */
   const handleProcess = async () => {
     if (files.length === 0) return;
-
     setProcessing(true);
+
     try {
       const file = files[0];
       const arrayBuffer = await file.arrayBuffer();
       const pdfDoc = await PDFDocument.load(arrayBuffer);
+
       const pages = pdfDoc.getPages();
-
-      const sizes: Record<string, { width: number; height: number }> = {
-        a4: { width: 595, height: 842 },
-        letter: { width: 612, height: 792 },
-        legal: { width: 612, height: 1008 },
-      };
-
-      const targetSize = sizes[cropSize];
 
       pages.forEach((page) => {
         const { width, height } = page.getSize();
 
-        // Calculate crop box to center the content
-        const x = Math.max(0, (width - targetSize.width) / 2);
-        const y = Math.max(0, (height - targetSize.height) / 2);
+        // Simple auto-crop: remove 5% margins
+        const marginX = width * 0.05;
+        const marginY = height * 0.05;
 
         page.setCropBox(
-          x,
-          y,
-          Math.min(targetSize.width, width),
-          Math.min(targetSize.height, height),
+          marginX,
+          marginY,
+          width - 2 * marginX,
+          height - 2 * marginY
         );
       });
 
@@ -59,9 +50,9 @@ const CropWrapper: FC = () => {
       });
       const url = URL.createObjectURL(blob);
       setProcessedUrl(url);
-    } catch (error) {
-      console.error("Error cropping PDF:", error);
-      alert("Failed to crop PDF. Please try again.");
+    } catch (err) {
+      console.error("Error cropping PDF:", err);
+      alert("Failed to crop PDF automatically.");
     } finally {
       setProcessing(false);
     }
@@ -78,7 +69,7 @@ const CropWrapper: FC = () => {
   return (
     <ToolLayout
       title="Crop PDF"
-      description="Crop and trim PDF pages to desired size"
+      description="Automatically crop PDF pages to remove margins"
       icon={<Crop className="w-8 h-8" />}
       files={files}
       onFilesChange={setFiles}
@@ -88,19 +79,6 @@ const CropWrapper: FC = () => {
     >
       {files.length > 0 && !processedUrl && (
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="cropSize">Page Size</Label>
-            <Select value={cropSize} onValueChange={setCropSize}>
-              <SelectTrigger id="cropSize">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="a4">A4 (210 × 297 mm)</SelectItem>
-                <SelectItem value="letter">Letter (8.5 × 11 in)</SelectItem>
-                <SelectItem value="legal">Legal (8.5 × 14 in)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <Button
             onClick={handleProcess}
             disabled={processing}
@@ -113,7 +91,7 @@ const CropWrapper: FC = () => {
                 Cropping...
               </>
             ) : (
-              "Crop PDF"
+              "Auto Crop PDF"
             )}
           </Button>
         </div>

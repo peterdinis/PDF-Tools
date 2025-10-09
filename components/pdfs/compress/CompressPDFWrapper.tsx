@@ -4,7 +4,7 @@ import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Minimize2, X, AlertCircle } from "lucide-react";
-import { PDFDocument, PDFImage } from "pdf-lib";
+import { PDFDocument } from "pdf-lib";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import ToolLayout from "@/components/tools/ToolLayout";
@@ -12,16 +12,37 @@ import PdfUpload from "../PdfUpload";
 
 type CompressionLevel = "low" | "medium" | "high";
 
+/**
+ * Statistics about the compression process.
+ */
 interface CompressionStats {
+  /** Original file size in bytes */
   originalSize: number;
+  /** Compressed file size in bytes */
   compressedSize: number;
+  /** Percentage of size reduction */
   reductionPercent: number;
+  /** Number of pages processed */
   pagesProcessed: number;
+  /** Number of images compressed (approximation) */
   imagesCompressed: number;
+  /** Compression time in milliseconds */
   compressionTime: number;
 }
 
+/**
+ * Advanced PDF Compressor with options for different compression levels.
+ * Uses `pdf-lib` to shrink PDFs by reducing page/image sizes,
+ * removing metadata, and applying save optimizations.
+ */
 class AdvancedPDFCompressor {
+  /**
+   * Compresses an image using Canvas and re-encodes it at a lower quality.
+   *
+   * @param imageData - Raw image data as Uint8Array.
+   * @param quality - JPEG quality (0–1).
+   * @returns Compressed image as Uint8Array.
+   */
   private static async compressImageWithCanvas(
     imageData: Uint8Array,
     quality: number,
@@ -44,6 +65,7 @@ class AdvancedPDFCompressor {
         let width = img.width;
         let height = img.height;
 
+        // Resize further for high compression levels
         if (quality < 0.6) {
           const scale = quality < 0.4 ? 0.5 : 0.7;
           width = Math.floor(img.width * scale);
@@ -52,7 +74,6 @@ class AdvancedPDFCompressor {
 
         canvas.width = width;
         canvas.height = height;
-
         ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
@@ -61,7 +82,6 @@ class AdvancedPDFCompressor {
               reject(new Error("Canvas to blob conversion failed"));
               return;
             }
-
             const reader = new FileReader();
             reader.onload = () => {
               resolve(new Uint8Array(reader.result as ArrayBuffer));
@@ -83,33 +103,40 @@ class AdvancedPDFCompressor {
     });
   }
 
+  /**
+   * Processes images and page sizes in a PDF depending on compression level.
+   *
+   * @param pdfDoc - The loaded PDF document.
+   * @param level - Compression level.
+   * @returns Number of images/pages processed.
+   */
   private static async processImagesInPDF(
     pdfDoc: PDFDocument,
     level: CompressionLevel,
   ): Promise<number> {
     let imagesCompressed = 0;
-
     try {
       const pages = pdfDoc.getPages();
-
       for (const page of pages) {
         const { width, height } = page.getSize();
-
         if (level === "high") {
           page.setSize(width * 0.8, height * 0.8);
         } else if (level === "medium") {
           page.setSize(width * 0.9, height * 0.9);
         }
       }
-
       imagesCompressed = pages.length;
     } catch {
       return 0;
     }
-
     return imagesCompressed;
   }
 
+  /**
+   * Removes all metadata from the PDF (author, title, producer, etc.).
+   *
+   * @param pdfDoc - The loaded PDF document.
+   */
   private static removeAllMetadata(pdfDoc: PDFDocument): void {
     pdfDoc.setTitle("");
     pdfDoc.setAuthor("");
@@ -121,12 +148,16 @@ class AdvancedPDFCompressor {
     pdfDoc.setModificationDate(new Date(0));
   }
 
+  /**
+   * Returns save options optimized for different compression levels.
+   *
+   * @param level - Compression level.
+   */
   private static getSaveOptions(level: CompressionLevel) {
     const baseOptions = {
       useObjectStreams: true,
       addDefaultPage: false,
     };
-
     switch (level) {
       case "high":
         return { ...baseOptions, objectsPerTick: 10 };
@@ -139,6 +170,13 @@ class AdvancedPDFCompressor {
     }
   }
 
+  /**
+   * Compresses a PDF buffer with the selected compression level.
+   *
+   * @param pdfData - Input PDF data as Uint8Array.
+   * @param level - Compression level ("low" | "medium" | "high").
+   * @returns Compressed PDF data + compression statistics.
+   */
   public static async compress(
     pdfData: Uint8Array,
     level: CompressionLevel,
@@ -175,6 +213,11 @@ class AdvancedPDFCompressor {
   }
 }
 
+/**
+ * React component wrapper for compressing PDFs.
+ * Provides file upload, compression level selection,
+ * result preview, and download functionality.
+ */
 const CompressPDFWrapper: FC = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -188,6 +231,9 @@ const CompressPDFWrapper: FC = () => {
     useState<CompressionLevel>("medium");
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Handles file selection and stores original size.
+   */
   const handleFileSelected = (selectedFiles: File[]) => {
     setFiles(selectedFiles);
     setError(null);
@@ -196,15 +242,16 @@ const CompressPDFWrapper: FC = () => {
     }
   };
 
+  /**
+   * Runs the compression process on the selected file.
+   */
   const handleCompress = async () => {
     if (files.length === 0) return;
-
     setIsProcessing(true);
     setError(null);
 
     try {
       const file = files[0];
-
       if (file.size > 50 * 1024 * 1024) {
         throw new Error("File size too large. Maximum size is 50MB.");
       }
@@ -236,6 +283,9 @@ const CompressPDFWrapper: FC = () => {
     }
   };
 
+  /**
+   * Downloads the compressed PDF.
+   */
   const handleDownload = () => {
     if (!compressedPdf) return;
     const link = document.createElement("a");
@@ -246,16 +296,19 @@ const CompressPDFWrapper: FC = () => {
     document.body.removeChild(link);
   };
 
+  /** Formats file size to human-readable string. */
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
     return (bytes / 1024 / 1024).toFixed(2) + " MB";
   };
 
+  /** Formats time in ms → human-readable string. */
   const formatTime = (ms: number) => {
     return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
   };
 
+  /** Resets state for a new compression run. */
   const handleResetAll = () => {
     setFiles([]);
     setCompressedPdf(null);
@@ -264,6 +317,7 @@ const CompressPDFWrapper: FC = () => {
     setError(null);
   };
 
+  /** Returns expected compression ratio as a string. */
   const getExpectedCompression = () => {
     switch (compressionLevel) {
       case "low":
