@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UrlObject } from "url";
 
 interface ToolCardProps {
   name: string;
@@ -19,7 +20,7 @@ export function ToolCard({
   color,
 }: ToolCardProps) {
   return (
-    <Link href={href}>
+    <Link href={href as unknown as UrlObject}>
       <Card className="h-full transition-all hover:shadow-lg hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/50">
         <CardContent className="p-6">
           <div className="flex flex-col gap-3">
