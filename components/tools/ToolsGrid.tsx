@@ -189,14 +189,6 @@ const tools = [
     color: "text-pink-500",
   },
   {
-    name: "Reduce PDF",
-    description:
-      "Reduce file size and optimize PDF documents to decrease file size.",
-    icon: Minimize2,
-    href: "/reduce",
-    color: "text-green-500",
-  },
-  {
     name: "Extract PDF",
     description:
       "Extract images, text and pages from PDF files. Get all the data you need from your PDF.",
