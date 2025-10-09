@@ -1,8 +1,12 @@
-import OrganizeWrapper from "@/components/pdfs/organize/OrganizeWrapper";
-import { NextPage } from "next";
+"use client"
 
-const OrganizePdfPage: NextPage = () => {
+import dynamic from "next/dynamic";
+
+const OrganizeWrapper = dynamic(
+  () => import("@/components/pdfs/organize/OrganizeWrapper"),
+  { ssr: false }
+);
+
+export default function OrganizePdfPage() {
   return <OrganizeWrapper />;
-};
-
-export default OrganizePdfPage;
+}
