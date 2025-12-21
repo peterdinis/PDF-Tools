@@ -15,7 +15,6 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   experimental: {
     browserDebugInfoInTerminal: true,
-    devtoolSegmentExplorer: true,
     viewTransition: true,
     typedEnv: true,
   },
