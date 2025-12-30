@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
 import dynamic from "next/dynamic";
 
 const ProtectWrapper = dynamic(
   () => import("@/components/pdfs/protect/ProtectWrapper"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function ProtectPdfPage() {

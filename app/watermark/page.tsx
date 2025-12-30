@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
 import dynamic from "next/dynamic";
 
 const WatermakWrapper = dynamic(
   () => import("@/components/pdfs/watermark/WatermarkWrapper"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function WatermarkPdfPage() {

@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
 import dynamic from "next/dynamic";
 
 const PdfToPowerPointWrapper = dynamic(
   () => import("@/components/pdfs/pdf-to-powerpoint/PDFToPowerpointWrapper"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function ExcelToPdfPage() {

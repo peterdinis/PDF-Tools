@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
 import dynamic from "next/dynamic";
 
 const RotateWrapper = dynamic(
   () => import("@/components/pdfs/rotate/RotateWrapper"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function RotatePdfPage() {

@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
 import dynamic from "next/dynamic";
 
 const EditWrapper = dynamic(
   () => import("@/components/pdfs/edit-pdf/EditPdfWrapper"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function EditPdfPage() {

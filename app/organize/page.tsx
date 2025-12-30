@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
 import dynamic from "next/dynamic";
 
 const OrganizeWrapper = dynamic(
   () => import("@/components/pdfs/organize/OrganizeWrapper"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function OrganizePdfPage() {

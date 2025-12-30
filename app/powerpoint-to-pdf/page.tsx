@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
 import dynamic from "next/dynamic";
 
 const PowerPointToPdfWrapper = dynamic(
   () => import("@/components/pdfs/powerpoint-to-pdf/PowerpointToPdfWrapper"),
-  { ssr: false }
+  { ssr: false },
 );
 
 export default function PowerpointToPdfPage() {
