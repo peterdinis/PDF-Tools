@@ -3,31 +3,60 @@
 import { FC, useState } from "react";
 import { FileText, Download, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import * as pdfjsLib from "pdfjs-dist";
 import ToolLayout from "@/components/tools/ToolLayout";
+
+// Set worker path
+if (typeof window !== "undefined") {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+}
 
 const PdfToWordWrapper: FC = () => {
   const [files, setFiles] = useState<File[]>([]);
   const [converting, setConverting] = useState(false);
   const [converted, setConverted] = useState(false);
+  const [extractedText, setExtractedText] = useState("");
 
   const handleConvert = async () => {
     if (files.length === 0) return;
 
     setConverting(true);
-    // Simulate conversion process
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setConverting(false);
-    setConverted(true);
+    try {
+      const file = files[0];
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(" ");
+        fullText += `Page ${i}\n\n${pageText}\n\n`;
+      }
+
+      setExtractedText(fullText);
+      setConverting(false);
+      setConverted(true);
+    } catch (error) {
+      console.error("Error extracting text:", error);
+      alert("Failed to extract text from PDF.");
+      setConverting(false);
+    }
   };
 
   const handleDownload = () => {
-    const blob = new Blob(["Converted Word document content"], {
-      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    // Create a simple blob with text content
+    // Many Word processors will open .docx if it's actually just text or basic HTML
+    // But for better compatibility we can just use .txt or a simple HTML wrapper
+    const blob = new Blob([extractedText], {
+      type: "application/msword",
     });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "converted.docx";
+    a.download = `${files[0].name.replace(".pdf", "")}.doc`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -36,6 +65,7 @@ const PdfToWordWrapper: FC = () => {
     setFiles([]);
     setConverting(false);
     setConverted(false);
+    setExtractedText("");
   };
 
   return (

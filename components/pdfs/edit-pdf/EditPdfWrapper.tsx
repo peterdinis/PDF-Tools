@@ -211,6 +211,7 @@ const EditPdfWrapper: FC = () => {
   const [tableColor, setTableColor] = useState("#000000");
   const [tableBorderColor, setTableBorderColor] = useState("#000000");
   const [tableBorderWidth, setTableBorderWidth] = useState("1");
+  const [tableDataText, setTableDataText] = useState("Header 1, Header 2\nData 1, Data 2");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -362,22 +363,31 @@ const EditPdfWrapper: FC = () => {
   };
 
   const addTableElement = () => {
-    const rows = Number.parseInt(tableRows);
-    const cols = Number.parseInt(tableCols);
-    const emptyData = Array(rows)
+    const rowsNum = Number.parseInt(tableRows);
+    const colsNum = Number.parseInt(tableCols);
+
+    // Parse data from text area
+    const lines = tableDataText.split("\n");
+    const parsedData = Array(rowsNum)
       .fill("")
-      .map(() => Array(cols).fill("Cell"));
+      .map((_, r) => {
+        const line = lines[r] || "";
+        const cells = line.split(",").map((c) => c.trim());
+        return Array(colsNum)
+          .fill("")
+          .map((_, c) => cells[c] || `Cell ${r + 1}-${c + 1}`);
+      });
 
     const newElement: TableElement = {
       id: Date.now().toString(),
       type: "table",
       x: Number.parseInt(tableX),
       y: Number.parseInt(tableY),
-      rows,
-      cols,
+      rows: rowsNum,
+      cols: colsNum,
       cellWidth: Number.parseInt(tableCellWidth),
       cellHeight: Number.parseInt(tableCellHeight),
-      data: emptyData,
+      data: parsedData,
       color: tableColor,
       borderColor: tableBorderColor,
       borderWidth: Number.parseInt(tableBorderWidth),
@@ -1015,22 +1025,25 @@ const EditPdfWrapper: FC = () => {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Font Weight</Label>
-                          <Select
-                            value={fontWeight}
-                            onValueChange={(value: FontWeight) =>
-                              setFontWeight(value)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="normal">Normal</SelectItem>
-                              <SelectItem value="bold">Bold</SelectItem>
-                              <SelectItem value="italic">Italic</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <Label>Formatting</Label>
+                          <div className="flex gap-2">
+                            <Button
+                              variant={fontWeight === "bold" ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setFontWeight(prev => prev === "bold" ? "normal" : "bold")}
+                              className="flex-1"
+                            >
+                              <strong>B</strong>
+                            </Button>
+                            <Button
+                              variant={fontWeight === "italic" ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setFontWeight(prev => prev === "italic" ? "normal" : "italic")}
+                              className="flex-1"
+                            >
+                              <em>I</em>
+                            </Button>
+                          </div>
                         </div>
                       </div>
 
@@ -1068,6 +1081,16 @@ const EditPdfWrapper: FC = () => {
                             Selected: {imageFile.name}
                           </p>
                         )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Table Data (Comma separated)</Label>
+                        <Textarea
+                          placeholder="Header 1, Header 2\nData 1, Data 2"
+                          value={tableDataText}
+                          onChange={(e) => setTableDataText(e.target.value)}
+                          className="min-h-20 text-xs font-mono"
+                        />
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">

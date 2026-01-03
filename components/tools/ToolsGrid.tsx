@@ -180,6 +180,20 @@ const tools = [
     href: "/crop",
     color: "text-pink-500",
   },
+  {
+    name: "Unlock PDF",
+    description: "Remove PDF password security, giving you the freedom to use your PDFs as you want.",
+    icon: Unlock,
+    href: "/unlock",
+    color: "text-green-500",
+  },
+  {
+    name: "HTML to PDF",
+    description: "Convert web pages or HTML files to PDF documents with a single click.",
+    icon: FileCheck,
+    href: "/html-to-pdf",
+    color: "text-blue-500",
+  },
 ];
 
 export function ToolsGrid() {
