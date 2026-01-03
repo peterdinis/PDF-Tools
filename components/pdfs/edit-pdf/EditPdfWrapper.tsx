@@ -46,7 +46,7 @@ import {
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import ToolLayout from "@/components/tools/ToolLayout";
 
-type ElementType = "text" | "image" | "rectangle" | "circle" | "line";
+type ElementType = "text" | "image" | "rectangle" | "circle" | "line" | "table";
 type TextAlignment = "left" | "center" | "right";
 type FontWeight = "normal" | "bold" | "italic";
 type ToolMode =
@@ -56,7 +56,8 @@ type ToolMode =
   | "image"
   | "rectangle"
   | "circle"
-  | "line";
+  | "line"
+  | "table";
 
 interface BaseElement {
   id: string;
@@ -116,12 +117,25 @@ interface LineElement extends BaseElement {
   dashed: boolean;
 }
 
+interface TableElement extends BaseElement {
+  type: "table";
+  rows: number;
+  cols: number;
+  cellWidth: number;
+  cellHeight: number;
+  data: string[][];
+  color: string;
+  borderColor: string;
+  borderWidth: number;
+}
+
 type PdfElement =
   | TextElement
   | ImageElement
   | RectangleElement
   | CircleElement
-  | LineElement;
+  | LineElement
+  | TableElement;
 
 interface EditorHistory {
   elements: PdfElement[];
@@ -186,6 +200,17 @@ const EditPdfWrapper: FC = () => {
   const [lineColor, setLineColor] = useState("#000000");
   const [lineThickness, setLineThickness] = useState("2");
   const [lineDashed, setLineDashed] = useState(false);
+
+  // Table element state
+  const [tableRows, setTableRows] = useState("3");
+  const [tableCols, setTableCols] = useState("3");
+  const [tableX, setTableX] = useState("100");
+  const [tableY, setTableY] = useState("100");
+  const [tableCellWidth, setTableCellWidth] = useState("100");
+  const [tableCellHeight, setTableCellHeight] = useState("30");
+  const [tableColor, setTableColor] = useState("#000000");
+  const [tableBorderColor, setTableBorderColor] = useState("#000000");
+  const [tableBorderWidth, setTableBorderWidth] = useState("1");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -336,6 +361,71 @@ const EditPdfWrapper: FC = () => {
     setSelectedElement(newElement.id);
   };
 
+  const addTableElement = () => {
+    const rows = Number.parseInt(tableRows);
+    const cols = Number.parseInt(tableCols);
+    const emptyData = Array(rows)
+      .fill("")
+      .map(() => Array(cols).fill("Cell"));
+
+    const newElement: TableElement = {
+      id: Date.now().toString(),
+      type: "table",
+      x: Number.parseInt(tableX),
+      y: Number.parseInt(tableY),
+      rows,
+      cols,
+      cellWidth: Number.parseInt(tableCellWidth),
+      cellHeight: Number.parseInt(tableCellHeight),
+      data: emptyData,
+      color: tableColor,
+      borderColor: tableBorderColor,
+      borderWidth: Number.parseInt(tableBorderWidth),
+      rotation: 0,
+      opacity: 1,
+      visible: true,
+      layer: elements.length,
+    };
+
+    const newElements = [...elements, newElement];
+    setElements(newElements);
+    saveToHistory(newElements);
+    setSelectedElement(newElement.id);
+  };
+
+  const addHeading = (level: 1 | 2 | 3) => {
+    const presets = {
+      1: { size: 32, weight: "bold" as FontWeight, content: "Heading 1" },
+      2: { size: 24, weight: "bold" as FontWeight, content: "Heading 2" },
+      3: { size: 18, weight: "bold" as FontWeight, content: "Heading 3" },
+    };
+    const preset = presets[level];
+
+    const newElement: TextElement = {
+      id: Date.now().toString(),
+      type: "text",
+      content: preset.content,
+      x: 100,
+      y: 100,
+      fontSize: preset.size,
+      font: "Helvetica",
+      fontWeight: preset.weight,
+      color: "#000000",
+      alignment: "left",
+      backgroundColor: "transparent",
+      padding: 0,
+      rotation: 0,
+      opacity: 1,
+      visible: true,
+      layer: elements.length,
+    };
+
+    const newElements = [...elements, newElement];
+    setElements(newElements);
+    saveToHistory(newElements);
+    setSelectedElement(newElement.id);
+  };
+
   const removeElement = (id: string) => {
     const newElements = elements.filter((element) => element.id !== id);
     setElements(newElements);
@@ -360,6 +450,8 @@ const EditPdfWrapper: FC = () => {
             return { ...element, ...updates } as CircleElement;
           case "line":
             return { ...element, ...updates } as LineElement;
+          case "table":
+            return { ...element, ...updates } as TableElement;
           default:
             return element;
         }
@@ -404,10 +496,10 @@ const EditPdfWrapper: FC = () => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? {
-          r: Number.parseInt(result[1], 16) / 255,
-          g: Number.parseInt(result[2], 16) / 255,
-          b: Number.parseInt(result[3], 16) / 255,
-        }
+        r: Number.parseInt(result[1], 16) / 255,
+        g: Number.parseInt(result[2], 16) / 255,
+        b: Number.parseInt(result[3], 16) / 255,
+      }
       : { r: 0, g: 0, b: 0 };
   };
 
@@ -531,7 +623,7 @@ const EditPdfWrapper: FC = () => {
           );
           const length = Math.sqrt(
             Math.pow(element.endX - element.x, 2) +
-              Math.pow(element.endY - element.y, 2),
+            Math.pow(element.endY - element.y, 2),
           );
 
           firstPage.drawRectangle({
@@ -542,6 +634,38 @@ const EditPdfWrapper: FC = () => {
             color: rgb(color.r, color.g, color.b),
             opacity: element.opacity,
           });
+        } else if (element.type === "table") {
+          const textColor = hexToRgb(element.color);
+          const borderColor = hexToRgb(element.borderColor);
+
+          for (let r = 0; r < element.rows; r++) {
+            for (let c = 0; c < element.cols; c++) {
+              const cellX = element.x + c * element.cellWidth;
+              const cellY = element.y + r * element.cellHeight;
+
+              // Draw cell border
+              firstPage.drawRectangle({
+                x: cellX,
+                y: height - cellY - element.cellHeight,
+                width: element.cellWidth,
+                height: element.cellHeight,
+                borderColor: rgb(borderColor.r, borderColor.g, borderColor.b),
+                borderWidth: element.borderWidth,
+                opacity: element.opacity,
+              });
+
+              // Draw cell content
+              const text = element.data[r][c] || "";
+              firstPage.drawText(text, {
+                x: cellX + 5,
+                y: height - cellY - (element.cellHeight / 2) - 5,
+                size: 10,
+                font: helveticaFont,
+                color: rgb(textColor.r, textColor.g, textColor.b),
+                opacity: element.opacity,
+              });
+            }
+          }
         }
       }
 
@@ -711,11 +835,10 @@ const EditPdfWrapper: FC = () => {
                     {elements.map((element) => (
                       <div
                         key={element.id}
-                        className={`flex items-center justify-between p-2 border rounded cursor-pointer ${
-                          selectedElement === element.id
-                            ? "bg-accent border-primary"
-                            : ""
-                        }`}
+                        className={`flex items-center justify-between p-2 border rounded cursor-pointer ${selectedElement === element.id
+                          ? "bg-accent border-primary"
+                          : ""
+                          }`}
                         onClick={() => setSelectedElement(element.id)}
                       >
                         <div className="flex items-center gap-2 flex-1">
@@ -810,14 +933,45 @@ const EditPdfWrapper: FC = () => {
                       setActiveTab(value as ElementType)
                     }
                   >
-                    <TabsList className="grid w-full grid-cols-3 mb-4">
+                    <TabsList className="grid w-full grid-cols-4 mb-4">
                       <TabsTrigger value="text">Text</TabsTrigger>
                       <TabsTrigger value="image">Image</TabsTrigger>
                       <TabsTrigger value="rectangle">Shape</TabsTrigger>
+                      <TabsTrigger value="table">Table</TabsTrigger>
                     </TabsList>
 
                     {/* Text Tab */}
                     <TabsContent value="text" className="space-y-4">
+                      <div className="space-y-2">
+                        <Label>Quick Headings</Label>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addHeading(1)}
+                            className="flex-1"
+                          >
+                            H1
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addHeading(2)}
+                            className="flex-1"
+                          >
+                            H2
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addHeading(3)}
+                            className="flex-1"
+                          >
+                            H3
+                          </Button>
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <Label>Text Content</Label>
                         <Textarea
@@ -1236,6 +1390,79 @@ const EditPdfWrapper: FC = () => {
                           Add Line
                         </Button>
                       </TabsContent>
+                    </TabsContent>
+
+                    {/* Table Tab */}
+                    <TabsContent value="table" className="space-y-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label>Rows</Label>
+                          <Input
+                            type="number"
+                            value={tableRows}
+                            onChange={(e) => setTableRows(e.target.value)}
+                            min="1"
+                            max="10"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Columns</Label>
+                          <Input
+                            type="number"
+                            value={tableCols}
+                            onChange={(e) => setTableCols(e.target.value)}
+                            min="1"
+                            max="10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label>Cell Width</Label>
+                          <Input
+                            type="number"
+                            value={tableCellWidth}
+                            onChange={(e) => setTableCellWidth(e.target.value)}
+                            min="10"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Cell Height</Label>
+                          <Input
+                            type="number"
+                            value={tableCellHeight}
+                            onChange={(e) => setTableCellHeight(e.target.value)}
+                            min="10"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <Label>Text Color</Label>
+                          <Input
+                            type="color"
+                            value={tableColor}
+                            onChange={(e) => setTableColor(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Border Color</Label>
+                          <Input
+                            type="color"
+                            value={tableBorderColor}
+                            onChange={(e) =>
+                              setTableBorderColor(e.target.value)
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      <Button onClick={addTableElement} className="w-full">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Table
+                      </Button>
                     </TabsContent>
                   </Tabs>
                 </CardContent>
