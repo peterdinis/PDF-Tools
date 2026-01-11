@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import { LoadingOverlay } from "@/components/shared/LoadingOverlay"
-import { FC } from "react"
+import { LoadingOverlay } from "@/components/shared/LoadingOverlay";
+import { FC } from "react";
 
 const Loading: FC = () => {
-    return <LoadingOverlay isVisible={true} />
-}
+  return <LoadingOverlay isVisible={true} />;
+};
 
-export default Loading
+export default Loading;

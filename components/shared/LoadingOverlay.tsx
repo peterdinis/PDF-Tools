@@ -6,7 +6,7 @@ import { Loader2, FileText, CheckCircle, AlertCircle } from "lucide-react";
 interface LoadingStep {
   id: string;
   label: string;
-  status: 'pending' | 'loading' | 'success' | 'error';
+  status: "pending" | "loading" | "success" | "error";
   progress?: number;
 }
 
@@ -54,7 +54,7 @@ export const LoadingOverlay = ({
               >
                 <FileText className="h-6 w-6 text-primary" />
               </motion.div>
-              
+
               <div className="flex-1">
                 <h3 className="text-lg font-semibold text-foreground">
                   {title}
@@ -67,7 +67,9 @@ export const LoadingOverlay = ({
             {totalProgress > 0 && (
               <div className="mb-6">
                 <div className="mb-2 flex justify-between text-sm">
-                  <span className="text-muted-foreground">Overall Progress</span>
+                  <span className="text-muted-foreground">
+                    Overall Progress
+                  </span>
                   <span className="font-medium text-foreground">
                     {Math.round(totalProgress)}%
                   </span>
@@ -100,21 +102,25 @@ export const LoadingOverlay = ({
                   >
                     {/* Status Icon */}
                     <div className="flex h-8 w-8 items-center justify-center">
-                      {step.status === 'pending' && (
+                      {step.status === "pending" && (
                         <div className="h-3 w-3 rounded-full border-2 border-muted-foreground/30" />
                       )}
-                      {step.status === 'loading' && (
+                      {step.status === "loading" && (
                         <motion.div
                           animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
                         >
                           <Loader2 className="h-4 w-4 text-primary" />
                         </motion.div>
                       )}
-                      {step.status === 'success' && (
+                      {step.status === "success" && (
                         <CheckCircle className="h-5 w-5 text-green-500" />
                       )}
-                      {step.status === 'error' && (
+                      {step.status === "error" && (
                         <AlertCircle className="h-5 w-5 text-destructive" />
                       )}
                     </div>

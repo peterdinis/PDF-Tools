@@ -187,7 +187,10 @@ const ScanWrapper: FC = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="letter" id="letter" />
-                  <Label htmlFor="letter" className="font-normal cursor-pointer">
+                  <Label
+                    htmlFor="letter"
+                    className="font-normal cursor-pointer"
+                  >
                     Letter (8.5 × 11 in)
                   </Label>
                 </div>
@@ -202,14 +205,19 @@ const ScanWrapper: FC = () => {
 
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
               {files.map((file, i) => (
-                <div key={i} className="relative aspect-[3/4] bg-muted rounded border overflow-hidden">
+                <div
+                  key={i}
+                  className="relative aspect-[3/4] bg-muted rounded border overflow-hidden"
+                >
                   <img
                     src={URL.createObjectURL(file)}
                     alt={`Page ${i + 1}`}
                     className="w-full h-full object-cover"
                   />
                   <button
-                    onClick={() => setFiles(files.filter((_, idx) => idx !== i))}
+                    onClick={() =>
+                      setFiles(files.filter((_, idx) => idx !== i))
+                    }
                     className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
                   >
                     ×
@@ -220,7 +228,8 @@ const ScanWrapper: FC = () => {
 
             <div className="bg-muted/50 p-4 rounded-lg">
               <p className="text-sm text-muted-foreground">
-                {files.length} page{files.length !== 1 ? "s" : ""} scanned/selected
+                {files.length} page{files.length !== 1 ? "s" : ""}{" "}
+                scanned/selected
               </p>
             </div>
 

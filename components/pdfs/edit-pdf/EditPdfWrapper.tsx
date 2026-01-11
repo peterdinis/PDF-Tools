@@ -211,7 +211,9 @@ const EditPdfWrapper: FC = () => {
   const [tableColor, setTableColor] = useState("#000000");
   const [tableBorderColor, setTableBorderColor] = useState("#000000");
   const [tableBorderWidth, setTableBorderWidth] = useState("1");
-  const [tableDataText, setTableDataText] = useState("Header 1, Header 2\nData 1, Data 2");
+  const [tableDataText, setTableDataText] = useState(
+    "Header 1, Header 2\nData 1, Data 2",
+  );
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -506,10 +508,10 @@ const EditPdfWrapper: FC = () => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result
       ? {
-        r: Number.parseInt(result[1], 16) / 255,
-        g: Number.parseInt(result[2], 16) / 255,
-        b: Number.parseInt(result[3], 16) / 255,
-      }
+          r: Number.parseInt(result[1], 16) / 255,
+          g: Number.parseInt(result[2], 16) / 255,
+          b: Number.parseInt(result[3], 16) / 255,
+        }
       : { r: 0, g: 0, b: 0 };
   };
 
@@ -633,7 +635,7 @@ const EditPdfWrapper: FC = () => {
           );
           const length = Math.sqrt(
             Math.pow(element.endX - element.x, 2) +
-            Math.pow(element.endY - element.y, 2),
+              Math.pow(element.endY - element.y, 2),
           );
 
           firstPage.drawRectangle({
@@ -668,7 +670,7 @@ const EditPdfWrapper: FC = () => {
               const text = element.data[r][c] || "";
               firstPage.drawText(text, {
                 x: cellX + 5,
-                y: height - cellY - (element.cellHeight / 2) - 5,
+                y: height - cellY - element.cellHeight / 2 - 5,
                 size: 10,
                 font: helveticaFont,
                 color: rgb(textColor.r, textColor.g, textColor.b),
@@ -845,10 +847,11 @@ const EditPdfWrapper: FC = () => {
                     {elements.map((element) => (
                       <div
                         key={element.id}
-                        className={`flex items-center justify-between p-2 border rounded cursor-pointer ${selectedElement === element.id
-                          ? "bg-accent border-primary"
-                          : ""
-                          }`}
+                        className={`flex items-center justify-between p-2 border rounded cursor-pointer ${
+                          selectedElement === element.id
+                            ? "bg-accent border-primary"
+                            : ""
+                        }`}
                         onClick={() => setSelectedElement(element.id)}
                       >
                         <div className="flex items-center gap-2 flex-1">
@@ -1028,17 +1031,29 @@ const EditPdfWrapper: FC = () => {
                           <Label>Formatting</Label>
                           <div className="flex gap-2">
                             <Button
-                              variant={fontWeight === "bold" ? "default" : "outline"}
+                              variant={
+                                fontWeight === "bold" ? "default" : "outline"
+                              }
                               size="sm"
-                              onClick={() => setFontWeight(prev => prev === "bold" ? "normal" : "bold")}
+                              onClick={() =>
+                                setFontWeight((prev) =>
+                                  prev === "bold" ? "normal" : "bold",
+                                )
+                              }
                               className="flex-1"
                             >
                               <strong>B</strong>
                             </Button>
                             <Button
-                              variant={fontWeight === "italic" ? "default" : "outline"}
+                              variant={
+                                fontWeight === "italic" ? "default" : "outline"
+                              }
                               size="sm"
-                              onClick={() => setFontWeight(prev => prev === "italic" ? "normal" : "italic")}
+                              onClick={() =>
+                                setFontWeight((prev) =>
+                                  prev === "italic" ? "normal" : "italic",
+                                )
+                              }
                               className="flex-1"
                             >
                               <em>I</em>
