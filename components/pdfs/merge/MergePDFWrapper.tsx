@@ -2,7 +2,7 @@
 
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Download, Layers, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
+import { Download, Layers, ArrowUp, ArrowDown, Trash2, Loader2 } from "lucide-react";
 import { PDFDocument } from "pdf-lib";
 import ToolLayout from "@/components/tools/ToolLayout";
 
@@ -160,9 +160,17 @@ const MergerPDFWrapper: FC = () => {
               className="w-full"
               size="lg"
             >
-              {isProcessing ? "Merging PDFs..." : "Merge PDFs"}
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Merging PDFs...
+                </>
+              ) : (
+                "Merge PDFs"
+              )}
             </Button>
           )}
+
         </div>
       )}
 

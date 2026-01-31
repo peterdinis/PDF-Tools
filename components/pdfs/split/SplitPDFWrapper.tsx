@@ -3,7 +3,7 @@
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, FileText, XCircle } from "lucide-react";
+import { Download, FileText, XCircle, Loader2 } from "lucide-react";
 import { PDFDocument } from "pdf-lib";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -219,7 +219,14 @@ const SplitPDFWrapper: FC = () => {
                       className="w-full"
                       size="lg"
                     >
-                      {isProcessing ? "Splitting PDF..." : "Split PDF"}
+                      {isProcessing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Splitting PDF...
+                        </>
+                      ) : (
+                        "Split PDF"
+                      )}
                     </Button>
                     <Button
                       type="button"

@@ -3,7 +3,7 @@
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, Lock, AlertCircle } from "lucide-react";
+import { Download, Lock, AlertCircle, Loader2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -174,7 +174,7 @@ const ProtectWrapper: FC = () => {
                   >
                     {isProcessing ? (
                       <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent mr-2" />
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Securing PDF...
                       </>
                     ) : (

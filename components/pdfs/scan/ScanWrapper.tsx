@@ -1,7 +1,7 @@
 "use client";
 
 import { FC, useState, useRef } from "react";
-import { ScanLine } from "lucide-react";
+import { ScanLine, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PDFDocument } from "pdf-lib";
 import { Label } from "@/components/ui/label";
@@ -239,7 +239,14 @@ const ScanWrapper: FC = () => {
               className="w-full"
               size="lg"
             >
-              {processing ? "Creating PDF..." : "Create PDF"}
+              {processing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating PDF...
+                </>
+              ) : (
+                "Create PDF"
+              )}
             </Button>
           </>
         )}

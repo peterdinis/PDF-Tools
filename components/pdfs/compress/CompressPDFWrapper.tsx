@@ -3,7 +3,7 @@
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, Minimize2, X, AlertCircle } from "lucide-react";
+import { Download, Minimize2, X, AlertCircle, Loader2 } from "lucide-react";
 import { PDFDocument } from "pdf-lib";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -387,7 +387,7 @@ const CompressPDFWrapper: FC = () => {
                   >
                     {isProcessing ? (
                       <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent" />
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Compressing PDF...
                       </div>
                     ) : (
@@ -455,7 +455,7 @@ const CompressPDFWrapper: FC = () => {
                   <span className="font-bold text-green-700">
                     {formatSize(
                       compressedPdf.stats.originalSize -
-                        compressedPdf.stats.compressedSize,
+                      compressedPdf.stats.compressedSize,
                     )}
                   </span>
                 </div>

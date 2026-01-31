@@ -3,7 +3,7 @@
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, ImageIcon } from "lucide-react";
+import { Download, ImageIcon, Loader2 } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
 import ToolLayout from "@/components/tools/ToolLayout";
 import PdfUpload from "../PdfUpload";
@@ -88,7 +88,14 @@ const PdfToJpgWrapper: FC = () => {
                     className="w-full"
                     size="lg"
                   >
-                    {isProcessing ? "Converting..." : "Convert to JPG"}
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Converting...
+                      </>
+                    ) : (
+                      "Convert to JPG"
+                    )}
                   </Button>
                 </div>
               )}

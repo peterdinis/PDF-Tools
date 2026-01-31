@@ -3,7 +3,7 @@
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Download, Upload, X } from "lucide-react";
+import { Download, Upload, X, Loader2 } from "lucide-react";
 import { PDFDocument } from "pdf-lib";
 import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
@@ -155,9 +155,14 @@ const JpgToPdfWrapper: FC = () => {
                     className="w-full"
                     size="lg"
                   >
-                    {isProcessing
-                      ? "Converting..."
-                      : `Convert ${images.length} Image${images.length > 1 ? "s" : ""} to PDF`}
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Converting...
+                      </>
+                    ) : (
+                      `Convert ${images.length} Image${images.length > 1 ? "s" : ""} to PDF`
+                    )}
                   </Button>
                 </div>
               )}
