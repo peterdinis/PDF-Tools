@@ -18,6 +18,12 @@ import {
   ScanLine,
   Hash,
   FileDown,
+  Type,
+  ImageIcon,
+  FileEdit,
+  Eraser,
+  Image as ImageLucide,
+  BookOpen,
 } from "lucide-react";
 import { ToolCard } from "./ToolCard";
 
@@ -195,6 +201,54 @@ const tools = [
     icon: FileCheck,
     href: "/html-to-pdf",
     color: "text-blue-500",
+  },
+  {
+    name: "PDF to Text",
+    description:
+      "Extract all text content from PDF files and save it as a text document.",
+    icon: Type,
+    href: "/pdf-to-text",
+    color: "text-indigo-500",
+  },
+  {
+    name: "PDF to PNG",
+    description:
+      "Convert PDF pages to high-quality PNG images with customizable settings.",
+    icon: ImageIcon,
+    href: "/pdf-to-png",
+    color: "text-cyan-500",
+  },
+  {
+    name: "PDF Metadata Editor",
+    description:
+      "Edit PDF metadata including title, author, subject, keywords, and more.",
+    icon: FileEdit,
+    href: "/pdf-metadata",
+    color: "text-violet-500",
+  },
+  {
+    name: "PDF Redact",
+    description:
+      "Permanently remove sensitive information from PDF documents with blackout redaction.",
+    icon: Eraser,
+    href: "/pdf-redact",
+    color: "text-red-600",
+  },
+  {
+    name: "Extract Images from PDF",
+    description:
+      "Extract all images embedded in PDF files and download them individually.",
+    icon: ImageLucide,
+    href: "/extract-images",
+    color: "text-pink-500",
+  },
+  {
+    name: "PDF Bookmark",
+    description:
+      "Add bookmarks and navigation outlines to PDF documents for easy navigation.",
+    icon: BookOpen,
+    href: "/pdf-bookmark",
+    color: "text-amber-500",
   },
 ];
 

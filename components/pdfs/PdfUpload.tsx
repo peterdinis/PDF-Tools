@@ -1,10 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
-import { useDropzone } from "react-dropzone";
-import { Upload, File, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { useCallback, useRef, useEffect } from "react";
+import { FilePond } from "react-filepond";
+import type { FilePondFile } from "filepond";
 
 interface PDFUploadProps {
   files?: File[];
@@ -23,45 +21,78 @@ export default function PdfUpload({
   maxFiles = 1,
   multiple = false,
 }: PDFUploadProps) {
-  const getAcceptObject = (types: string) => {
+  const pondRef = useRef<FilePond | null>(null);
+
+  const getAcceptedFileTypes = (types: string): string[] => {
+    // Default to PDF-only if not specified or if only PDF is requested
+    if (types === ".pdf" || types === "") {
+      return ["application/pdf"];
+    }
+
+    // Parse other file types if needed
     const typeArray = types.split(",").map((t) => t.trim());
-    const acceptObj: Record<string, string[]> = {};
+    const acceptedTypes: string[] = [];
 
     typeArray.forEach((type) => {
       if (type === ".pdf") {
-        acceptObj["application/pdf"] = [".pdf"];
+        acceptedTypes.push("application/pdf");
       } else if (type.includes(".doc")) {
-        acceptObj["application/msword"] = [".doc"];
-        acceptObj[
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        ] = [".docx"];
+        acceptedTypes.push("application/msword");
+        acceptedTypes.push(
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        );
       } else if (type.includes(".ppt")) {
-        acceptObj["application/vnd.ms-powerpoint"] = [".ppt"];
-        acceptObj[
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-        ] = [".pptx"];
+        acceptedTypes.push("application/vnd.ms-powerpoint");
+        acceptedTypes.push(
+          "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        );
       } else if (type.includes(".xls")) {
-        acceptObj["application/vnd.ms-excel"] = [".xls"];
-        acceptObj[
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        ] = [".xlsx"];
+        acceptedTypes.push("application/vnd.ms-excel");
+        acceptedTypes.push(
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        );
       } else if (type.includes(".jpg") || type.includes(".jpeg")) {
-        acceptObj["image/jpeg"] = [".jpg", ".jpeg"];
+        acceptedTypes.push("image/jpeg");
       } else if (type.includes(".png")) {
-        acceptObj["image/png"] = [".png"];
+        acceptedTypes.push("image/png");
       } else if (type.includes(".html") || type.includes(".htm")) {
-        acceptObj["text/html"] = [".html", ".htm"];
+        acceptedTypes.push("text/html");
       }
     });
 
-    return acceptObj;
+    return acceptedTypes.length > 0 ? acceptedTypes : ["application/pdf"];
   };
 
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const newFiles =
-        maxFiles === 1 ? acceptedFiles : [...files, ...acceptedFiles];
-      const limitedFiles = maxFiles ? newFiles.slice(0, maxFiles) : newFiles;
+  const extractFiles = useCallback(
+    (fileItems: FilePondFile[]): File[] => {
+      const extractedFiles: File[] = [];
+
+      fileItems.forEach((fileItem) => {
+        // Try different ways to get the file
+        if (fileItem.file instanceof File) {
+          extractedFiles.push(fileItem.file);
+        } else if (fileItem.source instanceof File) {
+          extractedFiles.push(fileItem.source);
+        } else if (fileItem.getFile instanceof Function) {
+          const file = fileItem.getFile();
+          if (file instanceof File) {
+            extractedFiles.push(file);
+          }
+        }
+      });
+
+      return extractedFiles;
+    },
+    [],
+  );
+
+  const notifyFiles = useCallback(
+    (fileItems: FilePondFile[]) => {
+      const extractedFiles = extractFiles(fileItems);
+      const limitedFiles = maxFiles
+        ? extractedFiles.slice(0, maxFiles)
+        : extractedFiles;
+
       if (onFilesChange) {
         onFilesChange(limitedFiles);
       }
@@ -69,90 +100,201 @@ export default function PdfUpload({
         onFilesSelected(limitedFiles);
       }
     },
-    [files, maxFiles, onFilesChange, onFilesSelected],
+    [maxFiles, onFilesChange, onFilesSelected, extractFiles],
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: getAcceptObject(acceptedFileTypes),
-    multiple: multiple || maxFiles > 1,
-    maxFiles,
-  });
+  const handleUpdateFiles = useCallback(
+    (fileItems: FilePondFile[]) => {
+      notifyFiles(fileItems);
+    },
+    [notifyFiles],
+  );
 
-  const removeFile = (index: number) => {
-    const newFiles = files.filter((_, i) => i !== index);
-    if (onFilesChange) {
-      onFilesChange(newFiles);
+  const validatePDFFile = useCallback(async (file: File): Promise<string | true> => {
+    // Check file extension
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      return "File must have .pdf extension";
     }
-    if (onFilesSelected) {
-      onFilesSelected(newFiles);
+
+    // Check MIME type (if available)
+    if (file.type && file.type !== "application/pdf") {
+      return "File must be a PDF document";
     }
-  };
+
+    // Validate PDF magic bytes (PDF files start with %PDF)
+    try {
+      const arrayBuffer = await file.slice(0, 4).arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const header = String.fromCharCode(...uint8Array);
+      
+      // PDF files should start with "%PDF"
+      if (header !== "%PDF") {
+        return "Invalid PDF file. File does not appear to be a valid PDF document.";
+      }
+    } catch (error) {
+      console.error("Error validating PDF:", error);
+      return "Error validating PDF file";
+    }
+
+    return true;
+  }, []);
+
+  const handleAddFile = useCallback(
+    async (error: Error | null, fileItem: FilePondFile) => {
+      if (error) {
+        console.error("FilePond add file error:", error);
+        return;
+      }
+
+      // Validate that the file is actually a PDF
+      const file = fileItem.file as File;
+      if (file) {
+        const validationResult = await validatePDFFile(file);
+        if (validationResult !== true) {
+          // Remove invalid file and show error
+          if (pondRef.current) {
+            pondRef.current.removeFile(fileItem.id);
+          }
+          // The error will be shown by FilePond's built-in error handling
+          return;
+        }
+      }
+
+      // Wait a bit for file to be fully processed
+      setTimeout(() => {
+        if (pondRef.current) {
+          const allFiles = pondRef.current.getFiles();
+          notifyFiles(allFiles);
+        }
+      }, 50);
+    },
+    [notifyFiles, validatePDFFile],
+  );
+
+  const handleFileValidateType = useCallback(
+    (file: File, type: string): boolean => {
+      // Additional validation: check if it's actually a PDF
+      if (type !== "application/pdf") {
+        return false;
+      }
+      if (!file.name.toLowerCase().endsWith(".pdf")) {
+        return false;
+      }
+      return true;
+    },
+    [],
+  );
+
+  const handleRemoveFile = useCallback(
+    () => {
+      // Immediately notify when file is removed
+      if (pondRef.current) {
+        const allFiles = pondRef.current.getFiles();
+        notifyFiles(allFiles);
+      }
+    },
+    [notifyFiles],
+  );
+
+  // Reset FilePond when files prop is cleared externally
+  useEffect(() => {
+    if (pondRef.current && files.length === 0) {
+      const currentFiles = pondRef.current.getFiles();
+      if (currentFiles.length > 0) {
+        pondRef.current.removeFiles();
+      }
+    }
+  }, [files.length]);
+
+  const acceptedTypes = getAcceptedFileTypes(acceptedFileTypes);
 
   return (
     <div className="w-full">
-      <div
-        {...getRootProps()}
-        className={cn(
-          "border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors",
-          isDragActive
-            ? "border-primary bg-primary/5"
-            : "border-border hover:border-primary/50 hover:bg-secondary/50",
-        )}
-      >
-        <input {...getInputProps()} />
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Upload className="w-8 h-8 text-primary" />
-          </div>
-          {isDragActive ? (
-            <p className="text-lg font-medium">Drop your files here...</p>
-          ) : (
-            <>
-              <div>
-                <p className="text-lg font-medium mb-1">Select files</p>
-                <p className="text-sm text-muted-foreground">
-                  or drag and drop them here
-                </p>
-              </div>
-              <Button type="button" variant="default">
-                Select files
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {files.length > 0 && (
-        <div className="mt-6 space-y-2">
-          <h3 className="font-semibold text-sm text-muted-foreground">
-            Selected Files:
-          </h3>
-          {files.map((file, index) => (
-            <div
-              key={`${file.name}-${index}`}
-              className="flex items-center justify-between p-3 bg-secondary rounded-lg"
-            >
-              <div className="flex items-center gap-3">
-                <File className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium text-sm">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {(file.size / 1024 / 1024).toFixed(2)} MB
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeFile(index)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
+      <style jsx global>{`
+        .filepond--root {
+          margin-bottom: 0;
+        }
+        .filepond--panel-root {
+          background-color: hsl(var(--secondary));
+          border: 2px dashed hsl(var(--border));
+          border-radius: calc(var(--radius) - 2px);
+          min-height: 120px;
+        }
+        .filepond--panel-root:hover {
+          border-color: hsl(var(--primary) / 0.5);
+          background-color: hsl(var(--secondary) / 0.5);
+        }
+        .filepond--drop-label {
+          color: hsl(var(--foreground));
+          font-size: 1rem;
+        }
+        .filepond--label-action {
+          color: hsl(var(--primary));
+          text-decoration: underline;
+        }
+        .filepond--credits {
+          display: none;
+        }
+        .filepond--file {
+          background-color: hsl(var(--secondary));
+        }
+        .filepond--file-status-main {
+          color: hsl(var(--foreground));
+        }
+        .filepond--file-status-sub {
+          color: hsl(var(--muted-foreground));
+        }
+        .filepond--file-action-button {
+          background-color: hsl(var(--destructive));
+          color: hsl(var(--destructive-foreground));
+        }
+        .filepond--file-action-button:hover {
+          background-color: hsl(var(--destructive) / 0.9);
+        }
+        .filepond--file-info-main {
+          color: hsl(var(--foreground));
+        }
+        .filepond--file-info-sub {
+          color: hsl(var(--muted-foreground));
+        }
+      `}</style>
+      <FilePond
+        ref={pondRef}
+        onupdatefiles={handleUpdateFiles}
+        onaddfile={handleAddFile}
+        onremovefile={handleRemoveFile}
+        fileValidateTypeDetectType={handleFileValidateType}
+        allowMultiple={multiple || (maxFiles ? maxFiles > 1 : false)}
+        maxFiles={maxFiles || undefined}
+        acceptedFileTypes={acceptedTypes}
+        labelIdle='Drag & Drop your PDF files or <span class="filepond--label-action">Browse</span>'
+        labelFileProcessing="Processing"
+        labelFileProcessingComplete="Processing complete"
+        labelFileProcessingAborted="Processing aborted"
+        labelFileProcessingError="Error during processing"
+        labelFileProcessingRevertError="Error during revert"
+        labelFileRemoveError="Error during remove"
+        labelTapToCancel="tap to cancel"
+        labelTapToRetry="tap to retry"
+        labelTapToUndo="tap to undo"
+        labelButtonRemoveItem="Remove"
+        labelButtonAbortItemLoad="Abort"
+        labelButtonRetryItemLoad="Retry"
+        labelButtonAbortItemProcessing="Cancel"
+        labelButtonStartItemLoad="Load"
+        labelButtonUndoItemLoad="Undo"
+        labelButtonRetryItemProcessing="Retry"
+        labelButtonStartItemProcessing="Process"
+        labelButtonUndoItemProcessing="Undo"
+        labelFileLoading="Loading"
+        labelFileLoadError="Error during load"
+        labelFileSizeNotAvailable="Size not available"
+        labelFileTypeNotAllowed="Only PDF files are allowed. Please select a valid PDF document."
+        instantUpload={false}
+        storeAsFile={true}
+        allowRevert={false}
+        checkValidity={true}
+      />
     </div>
   );
 }

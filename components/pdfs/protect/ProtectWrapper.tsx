@@ -4,6 +4,7 @@ import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Lock, AlertCircle, Loader2 } from "lucide-react";
+import { downloadFromUrl } from "@/lib/download";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -18,6 +19,7 @@ const ProtectWrapper: FC = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleProtect = async () => {
     if (files.length === 0) return;
@@ -61,14 +63,22 @@ const ProtectWrapper: FC = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!protectedPdf) return;
-    const link = document.createElement("a");
-    link.href = protectedPdf;
-    link.download = `protected_${files[0]?.name.replace(".pdf", "") || "document"}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    setIsDownloading(true);
+    try {
+      const filename = `protected_${files[0]?.name.replace(".pdf", "") || "document"}.pdf`;
+      const success = await downloadFromUrl(protectedPdf, filename);
+
+      if (!success) {
+        setError("Failed to download file. Please try again.");
+      }
+    } catch (error) {
+      setError("Failed to download file. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const resetAll = () => {
@@ -85,7 +95,7 @@ const ProtectWrapper: FC = () => {
     <ToolLayout
       title="Protect PDF"
       showUpload={true}
-      description="Add security metadata to your PDF files. Your document will be marked as protected."
+      description="Encrypt your PDF files with a password. Your document will be fully encrypted and require a password to open."
     >
       <Card>
         <CardContent className="p-6">
@@ -114,12 +124,12 @@ const ProtectWrapper: FC = () => {
 
                   <div>
                     <Label htmlFor="password" className="mb-2 block">
-                      Security Key
+                      Password
                     </Label>
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Enter security key (min 4 characters)"
+                      placeholder="Enter password (min 4 characters)"
                       value={password}
                       onChange={(e) => {
                         setPassword(e.target.value);
@@ -130,12 +140,12 @@ const ProtectWrapper: FC = () => {
 
                   <div>
                     <Label htmlFor="confirmPassword" className="mb-2 block">
-                      Confirm Security Key
+                      Confirm Password
                     </Label>
                     <Input
                       id="confirmPassword"
                       type="password"
-                      placeholder="Confirm security key"
+                      placeholder="Confirm password"
                       value={confirmPassword}
                       onChange={(e) => {
                         setConfirmPassword(e.target.value);
@@ -147,17 +157,17 @@ const ProtectWrapper: FC = () => {
                   <Alert className="bg-blue-50 border-blue-200">
                     <AlertCircle className="h-4 w-4 text-blue-600" />
                     <AlertDescription className="text-blue-800">
-                      <strong>Note:</strong> This adds security metadata to your
-                      PDF. For full encryption with password prompts, consider
-                      using professional PDF software.
+                      <strong>Secure Encryption:</strong> Your PDF will be fully
+                      encrypted with AES-128 encryption. Users will need to enter
+                      the password to open the document.
                     </AlertDescription>
                   </Alert>
 
                   <div className="p-4 bg-secondary rounded-lg">
                     <p className="text-sm text-muted-foreground">
-                      Your PDF will be marked as protected with security
-                      metadata. The security key is used for identification
-                      purposes.
+                      Your PDF will be encrypted with a password. Make sure to
+                      remember your password - you'll need it to open the
+                      protected PDF file.
                     </p>
                   </div>
 
@@ -193,34 +203,48 @@ const ProtectWrapper: FC = () => {
                 <Lock className="w-8 h-8 text-green-500" />
               </div>
               <h3 className="text-xl font-semibold mb-2">
-                PDF Secured Successfully!
+                PDF Encrypted Successfully!
               </h3>
 
               <div className="space-y-4 mb-6">
                 <Alert className="bg-green-50 border-green-200">
                   <AlertDescription className="text-green-800">
-                    <strong>Success!</strong> Security metadata has been added
-                    to your PDF document.
+                    <strong>Success!</strong> Your PDF has been encrypted with a
+                    password. The document is now protected and requires the
+                    password to open.
                   </AlertDescription>
                 </Alert>
 
                 <Alert variant={"default"}>
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    <strong>Note:</strong> This PDF contains security metadata
-                    but is not encrypted. For full password protection, use
-                    dedicated PDF software.
+                    <strong>Important:</strong> Save your password in a safe
+                    place. You'll need it to open this PDF file. The document
+                    is encrypted with AES-128 encryption.
                   </AlertDescription>
                 </Alert>
               </div>
 
               <div className="flex gap-3 justify-center">
-                <Button onClick={handleDownload} size="lg">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Secured PDF
+                <Button
+                  onClick={handleDownload}
+                  size="lg"
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Encrypted PDF
+                    </>
+                  )}
                 </Button>
                 <Button variant="outline" onClick={resetAll} size="lg">
-                  Secure Another PDF
+                  Encrypt Another PDF
                 </Button>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Download, Minimize2, X, AlertCircle, Loader2 } from "lucide-react";
+import { downloadFromUrl } from "@/lib/download";
 import { PDFDocument } from "pdf-lib";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -187,6 +188,7 @@ const CompressPDFWrapper: FC = () => {
   const [compressionLevel, setCompressionLevel] =
     useState<CompressionLevel>("medium");
   const [error, setError] = useState<string | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleFileSelected = (selectedFiles: File[]) => {
     setFiles(selectedFiles);
@@ -236,14 +238,22 @@ const CompressPDFWrapper: FC = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!compressedPdf) return;
-    const link = document.createElement("a");
-    link.href = compressedPdf.url;
-    link.download = `compressed_${compressionLevel}_${Date.now()}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    setIsDownloading(true);
+    try {
+      const filename = `compressed_${compressionLevel}_${Date.now()}.pdf`;
+      const success = await downloadFromUrl(compressedPdf.url, filename);
+
+      if (!success) {
+        setError("Failed to download file. Please try again.");
+      }
+    } catch (error) {
+      setError("Failed to download file. Please try again.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const formatSize = (bytes: number) => {
@@ -462,9 +472,22 @@ const CompressPDFWrapper: FC = () => {
               </div>
 
               <div className="flex gap-3 justify-center">
-                <Button onClick={handleDownload} size="lg">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Compressed PDF
+                <Button
+                  onClick={handleDownload}
+                  size="lg"
+                  disabled={isDownloading}
+                >
+                  {isDownloading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Downloading...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Compressed PDF
+                    </>
+                  )}
                 </Button>
                 <Button variant="outline" onClick={handleResetAll} size="lg">
                   Compress Another PDF
