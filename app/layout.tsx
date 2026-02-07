@@ -4,7 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ScrollToTop } from "@/components/shared/ScrollToTop";
 import { Suspense } from "react";
-import { LoadingOverlay } from "@/components/shared/LoadingOverlay";
+import Loading from "./loading";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,7 +49,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Suspense fallback={<LoadingOverlay isVisible={true} />}>
+        <Suspense fallback={<Loading />}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
