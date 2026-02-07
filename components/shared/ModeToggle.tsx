@@ -1,7 +1,8 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Loader2 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +14,20 @@ import {
 
 export function ModeToggle() {
   const { setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <Button variant="outline" size="icon" disabled>
+        <Loader2 className="h-[1.2rem] w-[1.2rem] animate-spin" />
+        <span className="sr-only">Loading theme...</span>
+      </Button>
+    );
+  }
 
   return (
     <DropdownMenu>
