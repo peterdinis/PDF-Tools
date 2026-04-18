@@ -254,9 +254,15 @@ const tools = [
 
 export function ToolsGrid() {
   return (
-    <section className="py-16">
+    <section className="py-24 bg-muted/30">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="flex flex-col items-center mb-16 space-y-4">
+          <div className="h-px w-24 bg-primary/30" />
+          <h2 className="text-3xl font-black tracking-tighter uppercase px-4 bg-background z-10 -mt-7">
+            Explore <span className="text-primary">Tools</span>
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {tools.map((tool) => (
             <ToolCard key={tool.name} {...tool} />
           ))}

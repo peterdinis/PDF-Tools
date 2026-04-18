@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  AlertTriangle, 
-  FileX, 
-  RefreshCw, 
-  Upload, 
-  Download, 
-  FileText, 
+import {
+  AlertTriangle,
+  FileX,
+  RefreshCw,
+  Upload,
+  Download,
+  FileText,
   ShieldAlert,
   HardDrive,
   Network,
@@ -19,14 +19,14 @@ import {
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export type ErrorType = 
-  | 'corrupted' 
-  | 'encrypted' 
-  | 'size_exceeded' 
-  | 'unsupported' 
-  | 'network' 
-  | 'permission' 
-  | 'parsing' 
+export type ErrorType =
+  | 'corrupted'
+  | 'encrypted'
+  | 'size_exceeded'
+  | 'unsupported'
+  | 'network'
+  | 'permission'
+  | 'parsing'
   | 'unknown';
 
 interface ErrorProps {
@@ -52,19 +52,26 @@ interface ErrorProps {
   };
 }
 
-const Error: React.FC<ErrorProps> = ({
-  errorType,
-  fileName = 'document.pdf',
-  fileSize,
-  errorCode,
-  errorMessage,
-  suggestions = [],
-  onRetry,
-  onUploadNew,
-  onDownload,
-  metadata,
-  debugInfo,
-}) => {
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  const errorType: ErrorType = (error as any).type || "unknown";
+  const fileName = (error as any).fileName || "document.pdf";
+  const fileSize = (error as any).fileSize;
+  const errorCode = (error as any).code || error.digest;
+  const errorMessage = error.message;
+  const suggestions: string[] = (error as any).suggestions || [];
+  const onRetry = reset;
+  const onUploadNew = () => window.location.href = "/";
+  const onDownload = undefined;
+  const metadata = (error as any).metadata;
+  const debugInfo = {
+    timestamp: new Date().toISOString(),
+  };
   const errorConfig = {
     corrupted: {
       title: 'Poškodený PDF súbor',
@@ -312,16 +319,6 @@ const Error: React.FC<ErrorProps> = ({
                         <span className="text-muted-foreground">Timestamp:</span> {debugInfo.timestamp}
                       </div>
                     )}
-                    {debugInfo?.browser && (
-                      <div>
-                        <span className="text-muted-foreground">Browser:</span> {debugInfo.browser}
-                      </div>
-                    )}
-                    {debugInfo?.os && (
-                      <div>
-                        <span className="text-muted-foreground">OS:</span> {debugInfo.os}
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -390,5 +387,3 @@ const Error: React.FC<ErrorProps> = ({
     </div>
   );
 };
-
-export default Error;

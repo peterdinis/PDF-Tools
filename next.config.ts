@@ -2,15 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 	reactStrictMode: true,
-	devIndicators: {
-		position: "bottom-right",
-	},
-
 	typedRoutes: true,
-	experimental: {
-		optimizeCss: true,
-		browserDebugInfoInTerminal: true,
-	},
 	poweredByHeader: false,
 	generateEtags: true,
 	compress: true,
