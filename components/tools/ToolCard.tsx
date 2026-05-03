@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,14 +22,22 @@ export function ToolCard({
   href,
   color,
 }: ToolCardProps) {
+  const pathname = usePathname();
+  const isSelected = pathname === href;
+
   return (
     <motion.div
       whileHover={{ y: -5 }}
       whileTap={{ scale: 0.98 }}
       className="h-full"
     >
-      <Link href={href}>
-        <Card className="h-full glass-card hover:bg-card/60 cursor-pointer overflow-hidden group">
+      <Link href={href} aria-current={isSelected ? "page" : undefined}>
+        <Card
+          className={cn(
+            "h-full glass-card hover:bg-card/60 cursor-pointer overflow-hidden group transition-all",
+            isSelected && "ring-2 ring-primary/60 shadow-lg shadow-primary/10",
+          )}
+        >
           <CardContent className="p-7">
             <div className="flex flex-col gap-4">
               <div
@@ -44,6 +53,9 @@ export function ToolCard({
                 <h3 className="font-bold text-xl tracking-tight group-hover:text-primary transition-colors">
                   {name}
                 </h3>
+                {isSelected && (
+                  <p className="text-xs text-primary font-medium">Currently selected</p>
+                )}
                 <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
                   {description}
                 </p>
